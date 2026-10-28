@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fake buy page</title>
+<style>
+  body { font-family: sans-serif; margin: 0; }
+  .col { width: 480px; margin-left: 900px; padding: 20px; }
+  section { padding: 10px 0 60px; }
+  h2.t { font-size: 24px; margin: 0 0 8px; }
+  label { display: block; border: 1px solid #999; padding: 12px; margin: 6px 0; }
+  .spacer { height: 1500px; }
+</style>
+<script type="application/ld+json">
+{"@type": "ProductGroup", "name": "Fake", "hasVariant": [
+  {"sku": "FAKE256", "offers": {"price": "1899", "priceCurrency": "GBP"}},
+  {"sku": "FAKE512", "offers": {"price": "2069", "priceCurrency": "GBP"}},
+  {"sku": "FAKE1TB", "offers": {"price": "2409", "priceCurrency": "GBP"}}
+]}
+</script>
+</head>
+<body>
+<div class="col">
+  <div id="region"></div>
+  <section>
+    <h2 class="t">Storage</h2>
+    <label><input type="radio" name="mem" value="256GB" data-sku="FAKE256" data-price="£1,899.00" checked> 256GB</label>
+    <label><input type="radio" name="mem" value="512GB" data-sku="FAKE512" data-price="£2,069.00"> 512GB</label>
+    <label><input type="radio" name="mem" value="1TB" data-sku="FAKE1TB" data-price="£2,409.00" data-unavailable> 1TB</label>
+    <div>Price: <span id="price"></span></div>
+    <div>SKU: <span id="sku"></span></div>
+  </section>
+  <section>
+    <h2 class="t">Colour</h2>
+    <label><input type="radio" name="col" value="Graphite" checked> Graphite</label>
+  </section>
+  <section>
+    <h2 class="t">Trade-in</h2>
+    <p>Yes, please / No, thanks</p>
+    <p id="multi">Verizon Financing<br>(Pay Monthly)</p>
+  </section>
+  <div class="spacer"></div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  document.getElementById('region').textContent = q.get('region') || 'Ontario';
+  let current = document.querySelector('input[name=mem]:checked');
+  function render() {
+    document.getElementById('price').textContent = '';
+    document.getElementById('sku').textContent = current.dataset.sku;
+    if (q.get('noprice')) return;
+    setTimeout(() => { document.getElementById('price').textContent = current.dataset.price; }, 100);
+  }
+  document.querySelectorAll('input[name=mem]').forEach(r => r.addEventListener('click', ev => {
+    if (q.get('stuck')) { ev.preventDefault(); return; }
+    current = r; render();
+  }));
+  render();
+</script>
+</body>
+</html>
