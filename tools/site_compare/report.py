@@ -57,6 +57,11 @@ def _ws(s: str) -> str:
 def _find_shot(r: ComboResult, section: str) -> tuple[Shot | None, str | None]:
     if section == "full":
         return None, (r.full_shots[0] if r.full_shots else None)
+    m = re.fullmatch(r"spec(?:-(\d+))?", section)
+    if m:
+        n = int(m.group(1) or 1)
+        shot = r.spec_shots[n - 1] if 0 < n <= len(r.spec_shots) else None
+        return shot, shot.path if shot else None
     m = re.fullmatch(r"extra-(\d+)", section)
     if m:
         n = int(m.group(1))
@@ -126,18 +131,82 @@ def _main(run: RunData, ctx_id: str, storage: str, carrier: str | None) -> Combo
     return None
 
 
-def _price_cell(r: ComboResult | None) -> dict:
+def _row_id(r: ComboResult) -> str:
+    return r.combo_id.split("__", 1)[1] if "__" in r.combo_id else r.combo_id
+
+
+def _lead_number(label: str) -> float | None:
+    m = re.match(r"\s*(\d+(?:\.\d+)?)", label)
+    return float(m.group(1)) if m else None
+
+
+def _ref_result(run: RunData, product: Product, col: dict) -> ComboResult | None:
+    if product.mode == "click":
+        return _main(run, col["ctx"].id, product.storages[0], col["carrier"])
+    mine = [r for r in run.results if r.context_id == col["ctx"].id and r.kind == "main"]
+    return next((r for r in mine if r.is_ref), mine[0] if mine else None)
+
+
+def _price_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
+    if product.mode == "click":
+        return [{"label": s, "cells": [_price_cell(_main(run, c["ctx"].id, s, c["carrier"]), c) for c in cols]}
+                for s in product.storages]
+    # a context without option axes (e.g. a spec-only one) sits in the row of the other contexts' reference combo
+    ref_row = next((_row_id(r) for r in run.results if r.is_ref and _row_id(r) != "ref"), "ref")
+    row_of = lambda r: ref_row if _row_id(r) == "ref" else _row_id(r)
+    ids: list[str] = []
+    labels: dict[str, str] = {}
+    for ctx in run.contexts:  # union of combo keys in context order; "55" and '55"' share a row (same value)
+        for r in run.results:
+            if r.context_id == ctx.id and r.kind == "main" and row_of(r) not in labels:
+                ids.append(row_of(r))
+            if r.context_id == ctx.id and r.kind == "main" and _row_id(r) != "ref":
+                labels.setdefault(row_of(r), r.key or row_of(r))
+            elif r.context_id == ctx.id and r.kind == "main":
+                labels.setdefault(row_of(r), "기준 구성")
+    if ids and all(_lead_number(labels[i]) is not None for i in ids):
+        ids.sort(key=lambda i: _lead_number(labels[i]))  # stable: 40mm·BT before 40mm·LTE
+    rows = []
+    for i in ids:
+        cells = []
+        for c in cols:
+            r = next((r for r in run.results if r.context_id == c["ctx"].id and r.kind == "main" and row_of(r) == i),
+                     None)
+            cells.append(_price_cell(r, c) if r else
+                         {"id": None, "cls": "cell missing" + (" spec-only" if c["ctx"].spec_only else ""),
+                          "text": "—", "was": None, "title": "이 컨텍스트에는 없는 조합", "status": None, "warn": 0})
+        rows.append({"label": labels[i], "cells": cells})
+    return rows
+
+
+def _key_spec_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
+    refs = [_ref_result(run, product, c) for c in cols]
+    rows = []
+    for rule in product.key_specs:
+        cells = []
+        for r in refs:
+            hit = next((sp for sp in (r.specs if r else []) if any(re.search(p, sp.label, re.I) for p in rule.patterns)),
+                       None)
+            cells.append({"value": hit.value, "label": hit.label} if hit else None)
+        rows.append({"label": rule.label_ko, "cells": cells})
+    return rows
+
+
+def _price_cell(r: ComboResult | None, col: dict | None = None) -> dict:
     if r is None:
         return {"id": None, "cls": "cell missing", "text": "미수집", "was": None, "title": "", "status": None, "warn": 0}
     p = r.got.prices if r.got else None
     cls = "cell" + (" diff" if r.price_match is False else "") + ("" if r.status == "ok" else f" st-{r.status}")
+    if col and col["ctx"].spec_only:
+        cls += " spec-only"
     tip = []
     if p:
         tip += [f"headline: {p.headline}", f"monthly: {p.monthly}", f"was: {p.was}"]
     if r.jsonld:
         tip.append(f"JSON-LD: {r.jsonld.price} {r.jsonld.currency}" + (f" (정가 {r.jsonld.strike})" if r.jsonld.strike else ""))
     if r.status == "unavailable":  # the page stayed on another variant; its price is not this combo's price
-        return {"id": r.combo_id, "cls": cls, "text": "선택 불가", "was": None,
+        sold_out = bool(r.got and r.got.available is False)
+        return {"id": r.combo_id, "cls": cls, "text": "판매 종료" if sold_out else "선택 불가", "was": None,
                 "title": "\n".join(r.warnings), "status": None, "warn": 0}
     if r.warnings:
         cls += " warned"
@@ -147,10 +216,9 @@ def _price_cell(r: ComboResult | None) -> dict:
 
 
 def _menu_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
-    first = product.storages[0]
     per_col = []
     for c in cols:
-        r = _main(run, c["ctx"].id, first, c["carrier"])
+        r = _ref_result(run, product, c)
         per_col.append([s for s in (r.sections if r else []) if s.section_id not in NOT_MENU])
     rows = []
     for rule in product.sections:
@@ -188,11 +256,31 @@ def build_report(run_dir: Path, product: Product, cards_path: Path) -> Path:
         run=run, product=product, cols=cols, labels=labels, by_ctx=by_ctx, checks=checks, cards=cards,
         status=Counter(r.status for r in run.results), n_warn=sum(len(r.warnings) for r in run.results),
         n_warned=sum(1 for r in run.results if r.warnings),
-        price_rows=[{"storage": s, "cells": [_price_cell(_main(run, c["ctx"].id, s, c["carrier"])) for c in cols]}
-                    for s in product.storages],
+        price_rows=_price_rows(run, product, cols), key_spec_rows=_key_spec_rows(run, product, cols),
         menu_rows=_menu_rows(run, product, cols), colors=list(product.colors),
         sec_labels={s.id: s.label_ko for s in product.sections},
     )
     out = run_dir / "report.html"
     out.write_text(html, encoding="utf-8")
+    return out
+
+
+def build_index(out_root: Path) -> Path:
+    """out_root/index.html: the latest run of every product with its status counts and report link."""
+    out_root = Path(out_root)
+    items = []
+    for product_dir in sorted(p for p in out_root.iterdir() if p.is_dir()):
+        runs = sorted(d for d in product_dir.iterdir() if (d / "data.json").exists())
+        if not runs:
+            continue
+        run = RunData.from_json(runs[-1] / "data.json")
+        items.append({"title": run.title, "product": product_dir.name, "run": runs[-1].name,
+                      "captured_at": run.captured_at, "status": Counter(r.status for r in run.results),
+                      "n": len(run.results), "contexts": [c.label for c in run.contexts],
+                      "report": f"{product_dir.name}/{runs[-1].name}/report.html",
+                      "has_report": (runs[-1] / "report.html").exists()})
+    env = Environment(loader=FileSystemLoader(Path(__file__).parent / "templates"),
+                      autoescape=select_autoescape(["html", "j2"]), trim_blocks=True, lstrip_blocks=True)
+    out = out_root / "index.html"
+    out.write_text(env.get_template("index.html.j2").render(items=items), encoding="utf-8")
     return out

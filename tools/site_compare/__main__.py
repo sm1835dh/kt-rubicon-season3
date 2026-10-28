@@ -25,8 +25,9 @@ def _resolve_run(product_id: str, run: str) -> Path:
 
 
 def _build(product, run_dir: Path) -> None:
-    from .report import build_report
+    from .report import build_index, build_report
     out = build_report(run_dir, product, HERE / "cards" / f"{product.id}.yaml")
+    print(f"index: {build_index(OUT_ROOT).resolve()}")
     print(out.resolve())
 
 

@@ -46,6 +46,9 @@ td.diff { background: var(--red-bg); } td.diff a { color: var(--red); }
 td.st-unavailable, td.st-mismatch, td.st-error { background: var(--amber-bg); }
 td.missing { color: var(--muted); }
 td.warned { background: var(--amber-bg); }
+th.spec-only, td.spec-only { color: var(--muted); background: var(--surface-2); }
+table.specs td, table.specs th { font-size: 12px; }
+#key-specs td { white-space: normal; min-width: 120px; }
 .menu td { text-align: center; } .menu td.no { color: var(--muted); } .menu th[scope=row] { white-space: nowrap; }
 .menu tr.raw th { font-style: italic; color: var(--muted); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 0 0 20px; }
@@ -102,7 +105,9 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
       {% for s in ["ok", "unavailable", "mismatch", "error"] %}<span class="chip {{ s }}">{{ s }} {{ status[s] }}</span>{% endfor %}
       <span class="chip warn">경고 있는 조합 {{ n_warned }} (경고 {{ n_warn }}건)</span>
       <span class="chip"><a href="data.json">data.json</a></span>
+      <span class="chip"><a href="../../index.html">전체 목차</a></span>
     </div>
+    {% if run.discovered %}<div class="muted" style="margin-top:6px">발견한 조합 수: {% for c in run.contexts if c.id in run.discovered %}{{ c.label }} {{ run.discovered[c.id] }}{% if not loop.last %} · {% endif %}{% endfor %}</div>{% endif %}
   </div>
 </header>
 
@@ -111,11 +116,11 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
 <section id="summary">
   <h2>요약</h2>
   <h3>가격 <span class="muted">(기기 일시불 · 칸을 누르면 부록의 해당 조합으로 이동 · 빨간 칸 = 화면 가격 ≠ JSON-LD)</span></h3>
-  <div class="scroll"><table>
-    <thead><tr><th></th>{% for c in cols %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
+  <div class="scroll"><table id="price-table">
+    <thead><tr><th></th>{% for c in cols %}<th{% if c.ctx.spec_only %} class="spec-only"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
     <tbody>
     {% for row in price_rows %}
-      <tr><th scope="row">{{ row.storage }}</th>
+      <tr><th scope="row">{{ row.label }}</th>
       {% for cell in row.cells %}
         <td class="{{ cell.cls }}" title="{{ cell.title }}">{% if cell.id %}<a href="#combo-{{ cell.id }}">{{ cell.text }}</a>{% else %}{{ cell.text }}{% endif %}{% if cell.was %}<s>{{ cell.was }}</s>{% endif %}{% if cell.status and cell.status != "ok" %}<div class="chip {{ cell.status }}">{{ cell.status }}</div>{% endif %}{% if cell.warn %}<div class="chip warn">경고 {{ cell.warn }}</div>{% endif %}</td>
       {% endfor %}
@@ -124,7 +129,21 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
     </tbody>
   </table></div>
 
-  <h3>메뉴(구매 단계) 구성 <span class="muted">({{ product.storages[0] }} 기준 · 숫자는 페이지 안 순서)</span></h3>
+  {% if key_spec_rows %}
+  <h3>주요 스펙 비교 <span class="muted">(컨텍스트별 기준 SKU · 값은 원문 · 칸에 마우스를 올리면 원래 라벨)</span></h3>
+  <div class="scroll"><table id="key-specs" class="specs">
+    <thead><tr><th></th>{% for c in cols %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in key_spec_rows %}
+      <tr><th scope="row">{{ row.label }}</th>
+      {% for cell in row.cells %}{% if cell %}<td title="{{ cell.label }}">{{ cell.value }}</td>{% else %}<td class="no">—</td>{% endif %}{% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+
+  <h3>메뉴(구매 단계) 구성 <span class="muted">({{ product.storages[0] if product.storages else "기준 SKU" }} 기준 · 숫자는 페이지 안 순서)</span></h3>
   <div class="scroll"><table class="menu">
     <thead><tr><th></th>{% for c in cols %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
     <tbody>
@@ -178,6 +197,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
 
 <section id="appendix">
   <h2>부록</h2>
+  {% if checks %}
   <h3>색상별 가격 ({{ product.storages[0] }}{% if product.carriers %}, US는 {{ product.carriers[0] }}{% endif %})</h3>
   <div class="scroll"><table>
     <thead><tr><th></th>{% for col in colors %}<th>{{ col }}</th>{% endfor %}</tr></thead>
@@ -193,6 +213,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
     {% endfor %}
     </tbody>
   </table></div>
+  {% endif %}
 
   {% for c in run.contexts %}
   <h3>{{ c.label }}</h3>
@@ -212,13 +233,22 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
         <tr><th>캡쳐 시각</th><td>{{ r.captured_at }}</td></tr>
       </table>
       {% if r.warnings %}<ul class="warns">{% for w in r.warnings %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
-      {% if r.full_shots %}<a class="thumb" href="{{ r.full_shots[0] }}" target="_blank"><img src="{{ r.full_shots[0] }}" alt="{{ r.combo_id }} 전체" loading="lazy"></a>{% endif %}
+      {% if r.full_shots %}<a class="thumb" href="{{ r.full_shots[0] }}" target="_blank"><img src="{{ r.full_shots[0] }}" alt="{{ r.combo_id }} 전체" loading="lazy"></a>
+      <div class="muted" style="font-size:12px">전체 캡쳐: {% for f in r.full_shots %}<a href="{{ f }}" target="_blank">{{ loop.index }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</div>{% endif %}
       {% if r.sections or r.extras %}
       <details><summary>섹션 캡쳐 {{ r.sections|length }}장{% if r.extras %} · 펼친 레이어 {{ r.extras|length }}장{% endif %}</summary>
         <div class="shots">
         {% for s in r.sections %}<div class="t">{{ s.order }}. {{ s.title }}{% if s.section_id %} → {{ sec_labels.get(s.section_id, s.section_id) }}{% endif %}</div><a href="{{ s.path }}" target="_blank"><img src="{{ s.path }}" alt="{{ s.title }}" loading="lazy"></a>{% endfor %}
         {% for s in r.extras %}<div class="t">레이어 {{ s.order }}. {{ s.title }}</div><a href="{{ s.path }}" target="_blank"><img src="{{ s.path }}" alt="{{ s.title }}" loading="lazy"></a>{% endfor %}
         </div>
+      </details>
+      {% endif %}
+      {% if r.specs or r.spec_shots %}
+      <details><summary>스펙 {{ r.specs|length }}개{% if r.spec_shots %} · 캡쳐 {{ r.spec_shots|length }}장{% endif %}</summary>
+        <table class="specs">
+        {% for sp in r.specs %}<tr>{% if loop.first or sp.group != r.specs[loop.index0 - 1].group %}<th>{{ sp.group }}</th>{% else %}<th></th>{% endif %}<td>{{ sp.label }}</td><td>{{ sp.value }}</td></tr>{% endfor %}
+        </table>
+        <div class="shots">{% for s in r.spec_shots %}<div class="t">{{ s.title }}</div><a href="{{ s.path }}" target="_blank"><img src="{{ s.path }}" alt="{{ s.title }}" loading="lazy"></a>{% endfor %}</div>
       </details>
       {% endif %}
     </article>
