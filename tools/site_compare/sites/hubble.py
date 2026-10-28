@@ -136,7 +136,8 @@ class HubbleDriver:
         label = d["label"] or ""
         monthly = toks[0] if len(toks) > 1 and "/mo" in label else None
         ws = lambda s: re.sub(r"\s+", " ", s).strip() if s else None
-        return State(storage, color, None, self._region_text(page), d["sku"],
+        selection = {k: v for k, v in (("storage", storage), ("color", color)) if v}
+        return State(selection, self._region_text(page), d["sku"],
                      PriceTexts(base=toks[-1] if toks else None, monthly=monthly, headline=ws(d["headline"]),
                                 was=ws(d["was"])))
 

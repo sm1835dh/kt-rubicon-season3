@@ -114,8 +114,8 @@ def capture_combo(page, driver: SiteDriver, product: Product, ctx: Context, comb
             if not _has_price(got.prices.base, ctx.locale):
                 warnings.append("price not rendered")
 
-        off = [f"selection mismatch: {axis} want={combo.want[axis]} got={getattr(got, axis)}"
-               for axis in AXES if axis in combo.want and _norm(combo.want[axis]) != _norm(getattr(got, axis))]
+        off = [f"selection mismatch: {axis} want={combo.want[axis]} got={got.selection.get(axis)}"
+               for axis in AXES if axis in combo.want and _norm(combo.want[axis]) != _norm(got.selection.get(axis))]
         if off:
             status = "unavailable" if refused else "mismatch"
             warnings += refused + off
@@ -155,7 +155,8 @@ def capture_combo(page, driver: SiteDriver, product: Product, ctx: Context, comb
         full = None
         warnings.append(f"full screenshot failed: {e}")
     return ComboResult(combo.id, ctx.id, combo.kind, combo.want, got, url_final, status, base, offer, match,
-                       sections, extras, full, warnings, now_kst().isoformat(timespec="seconds"))
+                       sections, extras, [full] if full else [], warnings, now_kst().isoformat(timespec="seconds"),
+                       key=combo.key)
 
 
 def capture_context(browser, driver: SiteDriver, product: Product, ctx: Context, combos: list[Combo],
@@ -169,7 +170,7 @@ def capture_context(browser, driver: SiteDriver, product: Product, ctx: Context,
 
     def failed(c: Combo, e: Exception) -> ComboResult:
         msg = f"error: page load/prepare failed: {type(e).__name__}: {e}"
-        return ComboResult(c.id, ctx.id, c.kind, c.want, None, None, "error", None, None, None, [], [], None,
+        return ComboResult(c.id, ctx.id, c.kind, c.want, None, None, "error", None, None, None, [], [], [],
                            [msg], now_kst().isoformat(timespec="seconds"))
 
     try:

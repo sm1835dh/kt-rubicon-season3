@@ -202,7 +202,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
       <h4><span>{{ r.combo_id }}</span><span class="chip {{ r.status }}">{{ r.status }}</span></h4>
       <table>
         <tr><th>선택</th><td>{{ r.want.values()|join(" / ") }}{% if r.kind == "color_check" %} <span class="muted">(색상 확인)</span>{% endif %}</td></tr>
-        <tr><th>화면 상태</th><td>{% if r.got %}{{ [r.got.storage, r.got.color, r.got.carrier, r.got.region]|select|join(" | ") }}<br><span class="muted">{{ r.got.sku }}</span>{% else %}—{% endif %}</td></tr>
+        <tr><th>화면 상태</th><td>{% if r.got %}{{ (r.got.selection.values()|list + [r.got.region])|select|join(" | ") }}<br><span class="muted">{{ r.got.sku }}</span>{% else %}—{% endif %}</td></tr>
         <tr><th>기준 가격</th><td>{{ r.got.prices.base if r.got else "—" }}{% if r.price_match is false %} <span class="chip error">JSON-LD 불일치</span>{% elif r.price_match %} <span class="chip ok">JSON-LD 일치</span>{% endif %}</td></tr>
         <tr><th>월 할부</th><td>{{ r.got.prices.monthly if r.got else "" }}</td></tr>
         <tr><th>정가(was)</th><td>{{ r.got.prices.was if r.got else "" }}</td></tr>
@@ -212,7 +212,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
         <tr><th>캡쳐 시각</th><td>{{ r.captured_at }}</td></tr>
       </table>
       {% if r.warnings %}<ul class="warns">{% for w in r.warnings %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
-      {% if r.full_shot %}<a class="thumb" href="{{ r.full_shot }}" target="_blank"><img src="{{ r.full_shot }}" alt="{{ r.combo_id }} 전체" loading="lazy"></a>{% endif %}
+      {% if r.full_shots %}<a class="thumb" href="{{ r.full_shots[0] }}" target="_blank"><img src="{{ r.full_shots[0] }}" alt="{{ r.combo_id }} 전체" loading="lazy"></a>{% endif %}
       {% if r.sections or r.extras %}
       <details><summary>섹션 캡쳐 {{ r.sections|length }}장{% if r.extras %} · 펼친 레이어 {{ r.extras|length }}장{% endif %}</summary>
         <div class="shots">

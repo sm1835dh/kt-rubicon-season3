@@ -138,7 +138,8 @@ class UsDriver:
         was = re.search(r"was\s*(\$[\d,.]+)", d["total"])
         head = money_tokens(d["headline"], ctx.locale)
         monthly = next((t for t in head if f"{t}/mo" in d["headline"].replace(" ", "")), None)
-        return State(storage, color, carrier, None, sku,
+        selection = {k: v for k, v in (("storage", storage), ("color", color), ("carrier", carrier)) if v}
+        return State(selection, None, sku,
                      PriceTexts(base=total[0] if total else None, monthly=monthly,
                                 headline=d["headline"] or None, was=was.group(1) if was else None))
 

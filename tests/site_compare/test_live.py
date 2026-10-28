@@ -36,7 +36,7 @@ def test_hubble_live_combo(tmp_path, ctx_id, storage):
     r = _capture(tmp_path, ctx_id, {"storage": storage, "color": "Graphite"})
     print(r.status, r.got, r.warnings, [(s.title, s.section_id) for s in r.sections], [s.title for s in r.extras])
     assert r.status == "ok", r.warnings
-    assert r.got.storage.replace(" ", "") == storage and r.got.color == "Graphite"
+    assert r.got.selection["storage"].replace(" ", "") == storage and r.got.selection["color"] == "Graphite"
     assert r.base is not None and r.price_match is True
     assert {"storage", "color", "trade_in", "care", "price_bar", "summary"} <= {s.section_id for s in r.sections}
     assert [s.title for s in r.extras] == ["Offer banner"]
@@ -56,7 +56,7 @@ def test_us_live_combo(tmp_path, carrier, suffix):
     r = _capture(tmp_path, "us", {"storage": "512GB", "color": "Graphite", "carrier": carrier})
     print(r.status, r.got, r.warnings, [(s.title, s.section_id) for s in r.sections], [s.title for s in r.extras])
     assert r.status == "ok", r.warnings
-    assert r.got.sku == f"SM-F976UZKE{suffix}" and r.got.carrier == carrier
+    assert r.got.sku == f"SM-F976UZKE{suffix}" and r.got.selection["carrier"] == carrier
     assert r.base is not None
     if carrier == "Unlocked":
         assert r.price_match is True

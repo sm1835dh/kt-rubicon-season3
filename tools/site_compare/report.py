@@ -56,7 +56,7 @@ def _ws(s: str) -> str:
 
 def _find_shot(r: ComboResult, section: str) -> tuple[Shot | None, str | None]:
     if section == "full":
-        return None, r.full_shot
+        return None, (r.full_shots[0] if r.full_shots else None)
     m = re.fullmatch(r"extra-(\d+)", section)
     if m:
         n = int(m.group(1))
@@ -69,7 +69,7 @@ def _find_shot(r: ComboResult, section: str) -> tuple[Shot | None, str | None]:
 def _got_text(r: ComboResult) -> str:
     if not r.got:
         return "(상태 없음)"
-    parts = [r.got.storage, r.got.color, r.got.carrier, r.got.region, r.got.sku]
+    parts = list(r.got.selection.values()) + [r.got.region, r.got.sku]
     return " | ".join(p for p in parts if p)
 
 

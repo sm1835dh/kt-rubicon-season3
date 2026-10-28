@@ -33,7 +33,7 @@ class FakeDriver:
 
     def read_state(self, page, ctx, product):
         storage = page.locator("input[name=mem]:checked").get_attribute("value")
-        return State(storage, "Graphite", None, page.inner_text("#region"), page.inner_text("#sku"),
+        return State({"storage": storage, "color": "Graphite"}, page.inner_text("#region"), page.inner_text("#sku"),
                      PriceTexts(base=page.inner_text("#price") or None))
 
     def section_boxes(self, page):
@@ -81,11 +81,11 @@ def _run(browser, tmp_path, want, query="", region=None, driver=None):
 def test_capture_ok_records_prices_sections_and_jsonld(browser, tmp_path):
     r = _run(browser, tmp_path, {"storage": "256GB", "color": "Graphite"})
     assert r.status == "ok", r.warnings
-    assert r.got.storage == "256GB"
+    assert r.got.selection["storage"] == "256GB"
     assert r.base == Money(1899.0, "GBP")
     assert r.jsonld.price == 1899.0 and r.price_match is True
     assert [s.section_id for s in r.sections] == ["storage", "color", "trade_in"]
-    assert (tmp_path / r.full_shot).exists() and all((tmp_path / s.path).exists() for s in r.sections)
+    assert (tmp_path / r.full_shots[0]).exists() and all((tmp_path / s.path).exists() for s in r.sections)
     assert any(t.text == "£1,899.00" for s in r.sections for t in s.texts)
 
 
@@ -103,7 +103,7 @@ def test_capture_selects_requested_storage(browser, tmp_path):
 def test_unavailable_option_recorded(browser, tmp_path):
     r = _run(browser, tmp_path, {"storage": "1TB", "color": "Graphite"})
     assert r.status == "unavailable"
-    assert r.full_shot is not None and (tmp_path / r.full_shot).exists()
+    assert r.full_shots and (tmp_path / r.full_shots[0]).exists()
 
 
 def test_price_retry_then_warning(browser, tmp_path):
@@ -147,7 +147,7 @@ class MissingControlDriver(FakeDriver):
 def test_unavailable_needs_final_state_mismatch(browser, tmp_path):
     r = _run(browser, tmp_path, {"storage": "512GB", "color": "Graphite"}, driver=ColorMessageDriver())
     assert r.status == "ok"
-    assert r.got.storage == "512GB"  # later axes are still tried after an unavailable step
+    assert r.got.selection["storage"] == "512GB"  # later axes are still tried after an unavailable step
 
 
 def test_missing_control_is_error_not_unavailable(browser, tmp_path):
