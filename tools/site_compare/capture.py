@@ -297,6 +297,14 @@ def discover_leaves(browser_context, driver, product: Product, ctx: Context, wai
                 ref_selection.update(driver.read_state(page, ctx, product).selection)
             spec = axes[len(prefix)]
             opts = driver.options(page, ctx, spec.name)
+            if not opts:  # options hydrate late on some loads: one reload before concluding there are none
+                page.reload(wait_until="domcontentloaded", timeout=90000)
+                page.wait_for_timeout(wait_ms)
+                driver.prepare(page, ctx)
+                for o in prefix:
+                    driver.choose(page, ctx, o)
+                    page.wait_for_timeout(wait_ms)
+                opts = driver.options(page, ctx, spec.name)
         finally:
             page.close()
         if spec.fixed:
@@ -339,13 +347,17 @@ def capture_leaf(browser_context, driver, product: Product, ctx: Context, combo:
         page, prep = _open(browser_context, driver, ctx, url or ctx.url, wait_ms)
         warnings += prep
         refused: list[str] = []
-        if not url:
+        if not url and combo.path:
+            current = driver.read_state(page, ctx, product).selection
             for o in combo.path:
+                if _matches(o, current.get(o.axis, "")):
+                    continue  # the page already shows this option (e.g. the reference SKU)
                 try:
                     driver.choose(page, ctx, o)
                 except OptionUnavailable as e:
                     refused.append(f"unavailable: {e}")
                 page.wait_for_timeout(wait_ms)
+                current = driver.read_state(page, ctx, product).selection
         got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings, reload_ok=True)
         off = []
         if combo.target_sku and got.sku and norm_value(got.sku) != norm_value(combo.target_sku):

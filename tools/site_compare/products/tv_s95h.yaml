@@ -12,6 +12,9 @@ contexts:
      url: "https://www.samsung.com/ca_fr/tvs/oled-tv/s95h-77-inch-4k-smart-tv-qn77s95hafxzc/"}
   - {id: ca-fr-qc, label: "CA-FR · Québec",  driver: pd, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: QN77S95HAFXZC,
      url: "https://www.samsung.com/ca_fr/tvs/oled-tv/s95h-77-inch-4k-smart-tv-qn77s95hafxzc/"}
+  - {id: us,       label: "US",              driver: us_pdp, locale: en-US, currency: USD, ref_sku: QN77S95HAFXZA,
+     cookies: {eddzipcode: "10001"},
+     url: "https://www.samsung.com/us/tvs/oled-tv/77-inch-oled-4k-tv-s95h-sku-qn77s95hafxza/"}
 sections:   # 순서 = 우선순위
   - {id: size,         label_ko: 크기,             patterns: ["choose your size", "choisissez votre taille", "select a size", "^size$"]}
   - {id: model,        label_ko: 모델(시리즈),     patterns: ["^model$"]}

@@ -12,6 +12,9 @@ contexts:
      url: "https://www.samsung.com/ca_fr/refrigerators/french-door/counter-depth-4-door-flex-refrigerator-with-beverage-center-23-cu-ft-stainless-steel-rf23dg9600srac/"}
   - {id: ca-fr-qc, label: "CA-FR · Québec",  driver: pd, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: RF23DG9600SRAC,
      url: "https://www.samsung.com/ca_fr/refrigerators/french-door/counter-depth-4-door-flex-refrigerator-with-beverage-center-23-cu-ft-stainless-steel-rf23dg9600srac/"}
+  - {id: us,       label: "US",              driver: us_pdp, locale: en-US, currency: USD, ref_sku: RF23DB9600QLAA,
+     cookies: {eddzipcode: "10001"}, axes: [{name: depth, iterate: true}],
+     url: "https://www.samsung.com/us/refrigerators/french-door/bespoke-counter-depth-4-door-flex-refrigerator-23-cu-ft-with-beverage-center-in-stainless-steel-sku-rf23db9600qlaa/"}
 sections:
   - {id: color,        label_ko: 색상,             patterns: ["colou?r", "couleur"]}
   - {id: depth,        label_ko: 깊이,             patterns: ["^depth$"]}

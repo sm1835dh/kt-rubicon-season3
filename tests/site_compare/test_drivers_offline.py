@@ -87,3 +87,20 @@ def test_pd_sections_map_to_rules():
     for ctx in ("uk", "ca-en-on", "ca-fr-qc"):
         ids = [map_section(t, product.sections) for t in _expected("pd", f"washer_flagship__{ctx}")["sections"]]
         assert "color" in ids and "pre_purchase" in ids, ids
+
+
+def test_us_pdp_options_and_prices():
+    tv, washer, fridge = (_expected("us_pdp", f"{p}__us") for p in ("tv_s95h", "washer_flagship", "fridge_t_style"))
+    assert _values(tv, "size") == {"55", "65", "77", "83"}
+    assert _values(washer, "color") == {"darksteel", "ivory"}
+    assert _values(fridge, "depth") == {"counterdepth", "fulldepth"}
+    for e in (tv, washer, fridge):
+        p = e["state"]["prices"]
+        assert p["base"].startswith("$") and p["was"].startswith("$") and p["monthly"].startswith("$")
+    assert tv["state"]["sku"] == "QN77S95HAFXZA" and fridge["state"]["sku"] == "RF23DB9600QLAA"
+
+
+def test_us_pdp_specs_have_groups_and_clean_labels():
+    tv = _expected("us_pdp", "tv_s95h__us")
+    assert tv["spec_count"] >= 100
+    assert all(g and "?" not in label for g, label, _ in tv["spec_sample"])  # no tooltip text glued to labels

@@ -15,6 +15,9 @@ contexts:
      url: "https://www.samsung.com/ca_fr/laundry/washing-machines/wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-6-1-cu-ft-gray-wf90f53adsa5/"}
   - {id: ca-fr-qc, label: "CA-FR · Québec",   driver: pd, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: WF90F53ADSA5,
      url: "https://www.samsung.com/ca_fr/laundry/washing-machines/wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-6-1-cu-ft-gray-wf90f53adsa5/"}
+  - {id: us,       label: "US",               driver: us_pdp, locale: en-US, currency: USD, ref_sku: WF90F53ADSA5,
+     cookies: {eddzipcode: "10001"},
+     url: "https://www.samsung.com/us/laundry/washers/front-load-wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-5-3-cu-ft-dark-steel-sku-wf90f53adsa5/"}
 sections:
   - {id: color,        label_ko: 색상,             patterns: ["colou?r", "couleur"]}
   - {id: capacity,     label_ko: 용량,             patterns: ["capacity", "capacité"]}

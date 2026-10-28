@@ -105,3 +105,31 @@ def test_pd_live_washer_uk_f_spec_only(tmp_path):
     r = capture_ref(tmp_path, "washer_flagship", "uk-f")
     assert r.status == "unavailable", r.warnings
     assert len(r.specs) >= 30
+
+
+# --- us_pdp: US product pages (TV, washer, fridge) -----------------------------------------------------------
+
+@pytest.mark.live
+@pytest.mark.parametrize("product_id,sku", [("tv_s95h", "QN77S95HAFXZA"), ("washer_flagship", "WF90F53ADSA5"),
+                                            ("fridge_t_style", "RF23DB9600QLAA")])
+def test_us_pdp_live_ref(tmp_path, product_id, sku):
+    r = capture_ref(tmp_path, product_id, "us")
+    _assert_ref(r, sku, min_specs=50)
+    p = r.got.prices
+    assert p.was and p.monthly and p.monthly.startswith("$"), p
+    assert r.price_match is True, (r.base, r.jsonld)
+    assert not any("highlights" in s.title.lower() for s in r.sections)
+    texts = " ".join(t.text for s in r.sections for t in s.texts)
+    assert "not available in your area" not in texts  # eddzipcode=10001 applied
+
+
+@pytest.mark.live
+def test_us_pdp_live_fridge_depth_options():
+    leaves, _ = _leaves("fridge_t_style", "us")
+    assert {l.path[0].value for l in leaves} == {"counterdepth", "fulldepth"}, [l.path[0].label for l in leaves]
+
+
+@pytest.mark.live
+def test_us_pdp_live_tv_sizes():
+    leaves, _ = _leaves("tv_s95h", "us")
+    assert {l.path[0].value for l in leaves} == {"55", "65", "77", "83"}, [l.path[0].label for l in leaves]

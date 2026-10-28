@@ -224,3 +224,36 @@ def test_tall_spec_box_is_split(bctx, tmp_path):
     r = _capture(bctx, tmp_path, product, leaves[0], TallSpecDriver())
     assert len(r.spec_shots) == 3 and all(s.height <= 3000 for s in r.spec_shots)
     assert [s.title for s in r.spec_shots] == ["Specs (1/3)", "Specs (2/3)", "Specs (3/3)"]
+
+
+class CountingDriver(FakePdpDriver):
+    def __init__(self):
+        super().__init__(direct=False)
+        self.clicks = 0
+
+    def choose(self, page, ctx, option):
+        self.clicks += 1
+        super().choose(page, ctx, option)
+
+
+def test_already_selected_options_are_not_clicked(bctx, tmp_path):
+    driver = CountingDriver()
+    product, leaves, _ = _leaves(bctx, [AxisSpec("size", iterate=True)], driver)
+    driver.clicks = 0
+    ref = next(l for l in leaves if l.is_ref)
+    r = _capture(bctx, tmp_path, product, ref, driver)
+    assert r.status == "ok" and driver.clicks == 0
+
+
+class LateOptionsDriver(FakePdpDriver):
+    """Options are missing until the page has been reloaded (late hydration)."""
+
+    def options(self, page, ctx, axis):
+        if not page.evaluate("performance.getEntriesByType('navigation')[0].type === 'reload'"):
+            return []
+        return super().options(page, ctx, axis)
+
+
+def test_discover_reloads_once_when_options_missing(bctx):
+    _, leaves, warnings = _leaves(bctx, [AxisSpec("size", iterate=True)], LateOptionsDriver())
+    assert len(leaves) == 3, warnings

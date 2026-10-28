@@ -34,9 +34,10 @@ _US_SPECS_JS = r"""
   for (const name of document.querySelectorAll('[class*=Specs_subSpecItemName]')) {
     const item = name.closest('[class*=Specs_subSpecsItem]') || name.parentElement;
     const val = item.querySelector('[class*=Specs_subSpecsItemValue]');
-    const grp = name.closest('[class*=Specs_specGroup]');
-    const gn = grp && grp.querySelector('[class*=Specs_specGroupName]');
-    out.push([clean(gn), clean(name), clean(val)]);
+    const li = name.closest('li');
+    const gn = li && li.querySelector('[class*=Specs_specGroupName]');
+    const label = name.querySelector('[itemprop=name]') || name;  // the tooltip sits beside [itemprop=name]
+    out.push([clean(gn), clean(label), clean(val)]);
   }
   return out;
 }
@@ -136,7 +137,7 @@ def us_specs(page) -> tuple[list[SpecItem], list[tuple[str, Box]]]:
             break
     items = [SpecItem(g, t, d) for g, t, d in page.evaluate(_US_SPECS_JS)]
     box = None
-    for sel in ("[id='#specs']", "#accordion-Specs", "[class*=Specs_specsContainer]", "[class*=Specs_container]"):
+    for sel in ("[class*=Specs_productSpec]", "[id='#specs']", "#accordion-Specs", "[class*=Specs_specContainer]"):
         box = box_of(page, sel)
         if box:
             break
