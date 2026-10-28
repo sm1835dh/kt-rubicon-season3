@@ -206,3 +206,18 @@ def test_tiny_highlight_gets_a_visible_box(tmp_path):
     cw, ch = (c["x1"] - c["x0"], c["y1"] - c["y0"]) if c else (1440, 619)
     b = p["boxes"][0]
     assert b["width"] * cw / 100 >= 28 and b["height"] * ch / 100 >= 28  # alt text of an icon is a 1×1 element
+
+
+def test_same_sku_in_another_language_shares_a_row(tmp_path):
+    en = Context("ca-en-on", "CA-EN", "pd", "https://www.samsung.com/ca/x/", "en-CA", "CAD", ref_sku="RF23")
+    fr = Context("ca-fr-on", "CA-FR", "pd", "https://www.samsung.com/ca_fr/x/", "fr-CA", "CAD", ref_sku="RF23")
+    a, b = _res(en, "silver", "$3,299.98", ref=True), _res(fr, "acierinoxydable", "$3,299.98", ref=True)
+    a.got.sku = b.got.sku = "RF23DG9600SRAC"
+    mism = _res(fr, "noir", "$1.00", status="mismatch")
+    mism.got.sku = "RF23DG9600SRAC"  # a mismatch shows another variant's SKU: it must not join that row
+    product = Product("demo", "Demo", [en, fr], sections=SECTIONS, mode="discover", key_specs=KEY)
+    d = _run_dir(tmp_path, [a, b, mism], contexts=(en, fr))
+    html = build_report(d, product, _cards(tmp_path)).read_text(encoding="utf-8")
+    table = html[html.index('id="price-table"'):]
+    table = table[:table.index("</table>")]
+    assert re.findall(r'<th scope="row">([^<]+)</th>', table) == ["silver", "noir"]

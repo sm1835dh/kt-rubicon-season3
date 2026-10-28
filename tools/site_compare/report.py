@@ -196,7 +196,16 @@ def _price_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
                 for s in product.storages]
     # a context without option axes (e.g. a spec-only one) sits in the row of the other contexts' reference combo
     ref_row = next((_row_id(r) for r in run.results if r.is_ref and _row_id(r) != "ref"), "ref")
-    row_of = lambda r: ref_row if _row_id(r) == "ref" else _row_id(r)
+    rows_by_combo: dict[str, str] = {}
+    sku_row: dict[str, str] = {}
+    for ctx in run.contexts:  # a verified SKU seen in an earlier context keeps its row (CA-FR "Acier" = CA-EN "Silver")
+        for r in run.results:
+            if r.context_id != ctx.id or r.kind != "main":
+                continue
+            row = ref_row if _row_id(r) == "ref" else _row_id(r)
+            sku = (r.got.sku or "").upper() if r.got and r.status == "ok" else ""
+            rows_by_combo[r.combo_id] = sku_row.setdefault(sku, row) if sku else row
+    row_of = lambda r: rows_by_combo[r.combo_id]
     ids: list[str] = []
     labels: dict[str, str] = {}
     for ctx in run.contexts:  # union of combo keys in context order; "55" and '55"' share a row (same value)
