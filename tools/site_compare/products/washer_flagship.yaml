@@ -34,9 +34,10 @@ sections:
   - {id: summary,      label_ko: 주문 요약,        patterns: ["^summary$"]}
 key_specs:
   - {id: capacity,     label_ko: 세탁 용량,        patterns: ["washing capacity", "capacité de lavage", "washer capacity", "^capacity"]}
-  - {id: energy_class, label_ko: 에너지 등급,      patterns: ["energy efficiency class", "energy star", "^tier", "cee"]}
+  - {id: energy_class, label_ko: 에너지 등급,      patterns: ["energy efficiency class", "classe d.efficacité énergétique", "^tier", "cee"]}
+  - {id: energy_star,  label_ko: ENERGY STAR,      patterns: ["energy star"]}
   - {id: energy_use,   label_ko: 에너지 소비량,    patterns: ["energy consumption", "consommation d.énergie", "consommation énergétique"]}
-  - {id: spin,         label_ko: 최대 탈수,        patterns: ["spin speed", "max.? spin", "essorage"]}
+  - {id: spin,         label_ko: 최대 탈수,        patterns: ["^spin speed$", "maximum spin speed", "vitesse d.essorage"]}
   - {id: dimensions,   label_ko: 치수,             patterns: ["net dimension", "^dimensions", "product dimensions"]}
   - {id: weight,       label_ko: 무게,             patterns: ["net weight", "poids net", "product weight"]}
-  - {id: noise,        label_ko: 소음,             patterns: ["noise", "bruit"]}
+  - {id: noise,        label_ko: 소음(탈수),       patterns: ["noise level", "niveau sonore", "noise", "bruit"]}

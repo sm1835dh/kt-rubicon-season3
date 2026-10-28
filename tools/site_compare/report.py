@@ -236,8 +236,8 @@ def _key_spec_rows(run: RunData, product: Product, cols: list[dict]) -> list[dic
     rows = []
     for rule in product.key_specs:
         cells = []
-        for r in refs:
-            hit = next((sp for sp in (r.specs if r else []) if any(re.search(p, sp.label, re.I) for p in rule.patterns)),
+        for r in refs:  # patterns are in priority order: "noise level" before the generic "noise"
+            hit = next((sp for p in rule.patterns for sp in (r.specs if r else []) if re.search(p, sp.label, re.I)),
                        None)
             cells.append({"value": hit.value, "label": hit.label} if hit else None)
         rows.append({"label": rule.label_ko, "cells": cells})

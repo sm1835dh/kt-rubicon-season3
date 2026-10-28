@@ -33,7 +33,7 @@ sections:
   - {id: summary,      label_ko: 주문 요약,        patterns: ["^summary$"]}
 key_specs:
   - {id: capacity,     label_ko: 총용량,           patterns: ["gross total", "net total", "total capacity", "total net", "capacité totale", "capacité brute"]}
-  - {id: energy_class, label_ko: 에너지 등급,      patterns: ["energy efficiency class", "energy star"]}
+  - {id: energy_class, label_ko: 에너지 등급·인증,  patterns: ["energy efficiency class", "energy star"]}
   - {id: energy_use,   label_ko: 에너지 소비량,    patterns: ["energy consumption", "consommation d.énergie", "consommation énergétique"]}
   - {id: dimensions,   label_ko: 치수,             patterns: ["net dimension", "^dimensions", "product dimensions"]}
   - {id: width,        label_ko: 폭,               patterns: ["net width", "^width", "^largeur"]}

@@ -221,3 +221,13 @@ def test_same_sku_in_another_language_shares_a_row(tmp_path):
     table = html[html.index('id="price-table"'):]
     table = table[:table.index("</table>")]
     assert re.findall(r'<th scope="row">([^<]+)</th>', table) == ["silver", "noir"]
+
+
+def test_key_spec_patterns_are_tried_in_order(tmp_path):
+    ref = _res(UK, "77", "£1.00", ref=True, specs=[SpecItem("Performance", "Noise Emission Class", "A"),
+                                                   SpecItem("Performance", "Noise Level (Spin)", "72 dB")])
+    product = Product("demo", "Demo", [UK, UKF, US], sections=SECTIONS, mode="discover",
+                      key_specs=[SectionRule("noise", "소음", ["noise level", "noise"])])
+    html = build_report(_run_dir(tmp_path, [ref]), product, _cards(tmp_path)).read_text(encoding="utf-8")
+    row = _row(html[html.index('id="key-specs"'):], "소음")
+    assert "72 dB" in row and ">A<" not in row
