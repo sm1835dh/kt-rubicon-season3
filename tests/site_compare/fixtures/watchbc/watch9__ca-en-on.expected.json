@@ -1,0 +1,88 @@
+{
+ "options": {
+  "size": [
+   [
+    "40mm",
+    "40mm",
+    "SM-L340NZKAXAC",
+    true
+   ],
+   [
+    "44mm",
+    "44mm",
+    "SM-L350NZKAXAC",
+    true
+   ]
+  ],
+  "connectivity": [
+   [
+    "bluetooth",
+    "Bluetooth",
+    "SM-L340NZKAXAC",
+    true
+   ],
+   [
+    "lte",
+    "LTE",
+    "SM-L345FZKAXAC",
+    true
+   ]
+  ],
+  "color": [
+   [
+    "graphite",
+    "Graphite",
+    "SM-L340NZKAXAC",
+    true
+   ],
+   [
+    "cream",
+    "Cream",
+    "SM-L340NZEAXAC",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "device": "Galaxy Watch9",
+   "size": "40mm",
+   "connectivity": "Bluetooth",
+   "color": "Graphite",
+   "band_type": "Sport Band Black",
+   "band_color": "S/M",
+   "band_size": "S/M"
+  },
+  "sku": "SM-L340NZKAXAC",
+  "prices": {
+   "base": "$519.99",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Device",
+  "Case size",
+  "Connectivity",
+  "Case colour",
+  "Band type",
+  "Band colour",
+  "Band size",
+  "Trade-in",
+  "Samsung Care+",
+  "Gifts and Savings"
+ ],
+ "spec_count": 0,
+ "spec_sample": [],
+ "offers": [
+  "SM-L340NZEAXAC",
+  "SM-L340NZKAXAC",
+  "SM-L345FZEAXAC",
+  "SM-L345FZKAXAC",
+  "SM-L350NZKAXAC",
+  "SM-L350NZSAXAC",
+  "SM-L355FZKAXAC",
+  "SM-L355FZSAXAC"
+ ]
+}

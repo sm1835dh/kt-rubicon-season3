@@ -1,0 +1,63 @@
+{
+ "options": {},
+ "state": {
+  "selection": {
+   "memory": "32GB",
+   "screen": "16\"",
+   "processor": "Intel® Core™ Ultra X7 processor 358H",
+   "graphic": "Intel® Arc™ B390",
+   "os": "Windows 11 Home",
+   "connectivity": "Wi-Fi",
+   "device": "Galaxy Book6 Pro",
+   "storage": "1TB",
+   "color": "Grey"
+  },
+  "sku": "NP960XJG-KGAUK",
+  "prices": {
+   "base": "£2,299.00",
+   "monthly": "£63.87",
+   "was": null
+  },
+  "available": null
+ },
+ "sections": [
+  "Price bar",
+  "Device",
+  "OS",
+  "Colour",
+  "Memory",
+  "Storage",
+  "Connectivity",
+  "Screen Size",
+  "Processor",
+  "Graphic",
+  "Trade-in",
+  "Samsung Care+",
+  "Gift and Savings",
+  "Buy direct. Get more.",
+  "Summary"
+ ],
+ "spec_count": 0,
+ "spec_sample": [],
+ "offers": [
+  "NP740VJG-KG1UK",
+  "NP740VJG-KG2UK",
+  "NP740VJG-KG4UK",
+  "NP760VJG-KG1UK",
+  "NP760VJG-KG3UK",
+  "NP940XJG-KG1UK",
+  "NP940XJG-KG4UK",
+  "NP940XJG-KG7UK",
+  "NP940XJG-KGDUK",
+  "NP944XJG-KA8UK",
+  "NP960UJH-XG5UK",
+  "NP960UJH-XG7UK",
+  "NP960XJG-KG3UK",
+  "NP960XJG-KG4UK",
+  "NP960XJG-KG6UK",
+  "NP960XJG-KGAUK",
+  "NP960XJG-KGJUK",
+  "NP964UJH-KA4UK",
+  "NP964XJG-KA8UK"
+ ]
+}

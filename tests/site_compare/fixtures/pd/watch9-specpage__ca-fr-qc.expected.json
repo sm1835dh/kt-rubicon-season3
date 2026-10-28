@@ -1,0 +1,49 @@
+{
+ "options": {
+  "size": [],
+  "connectivity": [],
+  "color": []
+ },
+ "state": {
+  "selection": {},
+  "sku": "SM-L340NZKAXAC",
+  "prices": {
+   "base": "519,99 $",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [],
+ "spec_count": 32,
+ "spec_sample": [
+  [
+   "Aperçu",
+   "Taille (écran principal)",
+   "1,3 po (34 mm)"
+  ],
+  [
+   "Aperçu",
+   "Poids du corps (g)",
+   "31.5"
+  ],
+  [
+   "Aperçu",
+   "Version Bluetooth",
+   "Bluetooth v6.0"
+  ],
+  [
+   "Aperçu",
+   "Stockage (Go)",
+   "32"
+  ],
+  [
+   "Aperçu",
+   "Vitesse de l’unité centrale",
+   "2.1GHz, 1,95 GHz"
+  ]
+ ],
+ "offers": [
+  "SM-L340NZKAXAC"
+ ]
+}

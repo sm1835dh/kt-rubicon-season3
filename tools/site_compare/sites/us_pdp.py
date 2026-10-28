@@ -10,7 +10,7 @@ from typing import Iterator
 from ..model import Context, Option, PriceTexts, Product, State
 from ..prices import money_tokens
 from .base import BaseDriver, Box, OptionNotFound, OptionUnavailable
-from .common import box_of, dismiss_banners, norm_label, us_specs
+from .common import box_of, click_tile, dismiss_banners, norm_label, us_specs
 
 UNAVAILABLE = re.compile(r"not available in your area|out of stock|no longer available|sold out", re.I)
 SNAPSHOT_KEEP = ["[class*=Header_headerContainer]", "[class*=PriceInfoText_]", "[class*=ModelInfo_]",
@@ -127,7 +127,7 @@ class UsPdpDriver(BaseDriver):
         if not option.available:
             raise OptionUnavailable(f"{option.axis} {option.label} is disabled")
         before = page.url
-        tile.click(no_wait_after=True, timeout=10000)
+        click_tile(tile)
         for _ in range(30):
             page.wait_for_timeout(500)
             if page.url != before or tile.get_attribute("aria-checked") == "true":

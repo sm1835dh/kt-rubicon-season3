@@ -70,7 +70,7 @@ def expected_for(page, driver, product, ctx) -> dict:
     return json.loads(json.dumps({
         "options": opts,
         "state": {"selection": st.selection, "sku": st.sku, "prices": prices, "available": st.available},
-        "sections": section_titles(driver, page),
+        "sections": section_titles(driver, page) if getattr(driver, "OFFLINE_SECTIONS", True) else None,
         "spec_count": len(specs),
         "spec_sample": [[s.group, s.label, s.value] for s in specs[:5]],
         "offers": sorted(extract_offers(page.content())),

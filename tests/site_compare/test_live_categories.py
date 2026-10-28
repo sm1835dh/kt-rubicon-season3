@@ -133,3 +133,58 @@ def test_us_pdp_live_fridge_depth_options():
 def test_us_pdp_live_tv_sizes():
     leaves, _ = _leaves("tv_s95h", "us")
     assert {l.path[0].value for l in leaves} == {"55", "65", "77", "83"}, [l.path[0].label for l in leaves]
+
+
+# --- watchbc: UK / CA / CA-FR watch buy pages; hubble: laptop series buy pages ------------------------------
+
+@pytest.mark.live
+@pytest.mark.parametrize("ctx_id,sku", [("uk", "SM-L340NZKAEUB"), ("ca-fr-qc", "SM-L340NZKAXAC")])
+def test_watchbc_live_ref(tmp_path, ctx_id, sku):
+    r = capture_ref(tmp_path, "watch9", ctx_id)
+    _assert_ref(r, sku, min_specs=20, min_buy_sections=6)
+    assert "case_size" in {s.section_id for s in r.sections}
+    assert r.got.selection.get("connectivity", "").lower() == "bluetooth"
+
+
+@pytest.mark.live
+def test_watchbc_live_leaves_uk():
+    leaves, warnings = _leaves("watch9", "uk")
+    assert len(leaves) == 4, (warnings, [l.id for l in leaves])
+    assert {(l.path[0].value, l.path[1].value) for l in leaves} == {
+        ("40mm", "bluetooth"), ("40mm", "lte"), ("44mm", "bluetooth"), ("44mm", "lte")}
+    assert all(l.target_sku and "ZK" in l.target_sku for l in leaves), [l.target_sku for l in leaves]
+
+
+@pytest.mark.live
+@pytest.mark.parametrize("ctx_id,sku", [("uk", "NP960XJG-KGAUK"), ("ca-fr-on", "NP960XJG-KG1CA")])
+def test_hubble_laptop_live_ref(tmp_path, ctx_id, sku):
+    r = capture_ref(tmp_path, "laptop_book6_pro", ctx_id)
+    _assert_ref(r, sku, min_specs=20, min_buy_sections=6)
+    assert r.got.selection.get("color") and r.got.selection.get("storage")
+    if ctx_id.startswith("ca"):
+        assert r.got.prices.was, r.got.prices
+
+
+# --- us: US buy pages (watch, laptop) — the same driver as Fold8 in click mode ------------------------------
+
+@pytest.mark.live
+def test_us_watch_live_ref(tmp_path):
+    r = capture_ref(tmp_path, "watch9", "us")
+    _assert_ref(r, "SM-L340NZKAXAA", min_specs=20, min_buy_sections=6)
+    assert r.got.selection.get("connectivity", "").lower() == "bluetooth", r.got.selection  # no "Wifi" mix-up
+    assert r.got.selection.get("color", "").lower() == "graphite", r.got.selection
+    assert r.got.prices.monthly and r.got.prices.monthly.startswith("$"), r.got.prices
+
+
+@pytest.mark.live
+def test_us_watch_live_leaves():
+    leaves, warnings = _leaves("watch9", "us")
+    assert {(l.path[0].value, l.path[1].value) for l in leaves} == {
+        ("40mm", "bluetooth"), ("40mm", "lte"), ("44mm", "bluetooth"), ("44mm", "lte")}, (warnings, [l.id for l in leaves])
+
+
+@pytest.mark.live
+def test_us_laptop_live_ref(tmp_path):
+    r = capture_ref(tmp_path, "laptop_book6_pro", "us")
+    _assert_ref(r, "NP960XJG-KG1US", min_specs=20, min_buy_sections=6)
+    assert r.got.prices.was and r.price_match is True, (r.got.prices, r.jsonld)

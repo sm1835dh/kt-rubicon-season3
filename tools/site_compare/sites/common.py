@@ -39,6 +39,15 @@ _US_SPECS_JS = r"""
     const label = name.querySelector('[itemprop=name]') || name;  // the tooltip sits beside [itemprop=name]
     out.push([clean(gn), clean(label), clean(val)]);
   }
+  if (!out.length) {  // buy-page accordion markup: rows (group title) > containers (label + details)
+    for (const row of document.querySelectorAll('[class*=Specs_rows]')) {
+      const gt = row.querySelector('[class*=Specs_title]');
+      for (const c of row.querySelectorAll('[class*=Specs_container]')) {
+        const l = c.querySelector('[class*=Specs_groupsItems]'), v = c.querySelector('[class*=Specs_specDetails]');
+        if (l) out.push([clean(gt), clean(l), clean(v)]);
+      }
+    }
+  }
   return out;
 }
 """
@@ -73,7 +82,8 @@ def js_click(page, selector: str) -> bool:
 
 def dismiss_banners(page) -> None:
     """Cookie consent (if the preset cookies did not suppress it), geo bar and chat teasers."""
-    for sel in ("#truste-consent-required", ".truste-banner-close", ".nv16-country-selector__close"):
+    for sel in ("#truste-consent-required", ".truste-banner-close", ".nv16-country-selector__close",
+                "#overlay-close"):  # US promo overlays that intercept clicks
         if js_click(page, sel):
             page.wait_for_timeout(800)
     try:
@@ -106,7 +116,7 @@ def pdd32_specs(page) -> tuple[list[SpecItem], list[tuple[str, Box]]]:
     if not page.locator(".pdd32-product-spec").count():
         return [], []
     btn = page.locator(".pdd32-product-spec__expand-cta button")
-    if btn.count():
+    if btn.count() and btn.first.is_visible():
         label = (btn.first.text_content() or "").lower()
         if "collapse" not in label and "réduire" not in label:
             try:
@@ -125,7 +135,7 @@ def us_specs(page) -> tuple[list[SpecItem], list[tuple[str, Box]]]:
     for sel in ("a[class*=Specs_expandBtn]", "[data-testid=accordion-title]:has-text('Specs')",
                 "[aria-label='Specs'][role=button]"):
         loc = page.locator(sel)
-        if loc.count():
+        if loc.count() and loc.first.is_visible():
             try:
                 loc.first.scroll_into_view_if_needed(timeout=5000)
                 text = (loc.first.text_content() or "").lower()
@@ -137,7 +147,8 @@ def us_specs(page) -> tuple[list[SpecItem], list[tuple[str, Box]]]:
             break
     items = [SpecItem(g, t, d) for g, t, d in page.evaluate(_US_SPECS_JS)]
     box = None
-    for sel in ("[class*=Specs_productSpec]", "[id='#specs']", "#accordion-Specs", "[class*=Specs_specContainer]"):
+    for sel in ("[class*=Specs_productSpec]", "[id='#specs']", "#accordion-Specs", "[class*=Specs_specsContainer]",
+                "[class*=Specs_specContainer]"):
         box = box_of(page, sel)
         if box:
             break
@@ -165,3 +176,11 @@ def close_layers(page) -> None:
 
 def norm_label(s: str | None) -> str:
     return re.sub(r"[\s\"'″”“’]+", "", (s or "")).lower()
+
+
+def click_tile(locator, timeout_ms: int = 10000) -> None:
+    """Real click, falling back to a JS click when an overlay intercepts pointer events."""
+    try:
+        locator.click(no_wait_after=True, timeout=timeout_ms)
+    except Exception:
+        locator.evaluate("e => e.click()")

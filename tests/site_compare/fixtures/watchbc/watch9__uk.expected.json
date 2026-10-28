@@ -1,0 +1,89 @@
+{
+ "options": {
+  "size": [
+   [
+    "40mm",
+    "40mm",
+    "SM-L340NZKAEUB",
+    true
+   ],
+   [
+    "44mm",
+    "44mm",
+    "SM-L350NZKAEUB",
+    true
+   ]
+  ],
+  "connectivity": [
+   [
+    "bluetooth",
+    "Bluetooth",
+    "SM-L340NZKAEUB",
+    true
+   ],
+   [
+    "lte",
+    "LTE",
+    "SM-L345FZKAEUB",
+    true
+   ]
+  ],
+  "color": [
+   [
+    "cream",
+    "Cream",
+    "SM-L340NZEAEUB",
+    true
+   ],
+   [
+    "graphite",
+    "Graphite",
+    "SM-L340NZKAEUB",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "device": "Galaxy Watch9",
+   "size": "40mm",
+   "connectivity": "Bluetooth",
+   "color": "Graphite",
+   "band_type": "Sport Band Black",
+   "band_color": "S/M",
+   "band_size": "S/M"
+  },
+  "sku": "SM-L340NZKAEUB",
+  "prices": {
+   "base": "£349.00",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Device",
+  "Case size",
+  "Connectivity",
+  "Case colour",
+  "Band type",
+  "Band colour",
+  "Band size",
+  "Trade-in",
+  "Samsung Care+",
+  "Gifts and Savings",
+  "Buy direct. Get more."
+ ],
+ "spec_count": 0,
+ "spec_sample": [],
+ "offers": [
+  "SM-L340NZEAEUB",
+  "SM-L340NZKAEUB",
+  "SM-L345FZEAEUB",
+  "SM-L345FZKAEUB",
+  "SM-L350NZKAEUB",
+  "SM-L350NZSAEUB",
+  "SM-L355FZKAEUB",
+  "SM-L355FZSAEUB"
+ ]
+}

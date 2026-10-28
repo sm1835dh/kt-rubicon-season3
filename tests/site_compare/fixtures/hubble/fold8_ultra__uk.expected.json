@@ -1,0 +1,45 @@
+{
+ "options": {},
+ "state": {
+  "selection": {
+   "device": "Galaxy Z Fold8 Ultra",
+   "storage": "512GB",
+   "color": "Graphite"
+  },
+  "sku": "SM-F976BZKCEUB",
+  "prices": {
+   "base": "£2,069.00",
+   "monthly": "£57.48",
+   "was": null
+  },
+  "available": null
+ },
+ "sections": [
+  "Price bar",
+  "Device",
+  "Storage",
+  "Colour",
+  "Trade-in",
+  "Pay monthly phone contracts",
+  "Samsung Care+",
+  "Gifts and Savings",
+  "Buy direct. Get more.",
+  "Summary"
+ ],
+ "spec_count": 0,
+ "spec_sample": [],
+ "offers": [
+  "SM-F976BDGBEUB",
+  "SM-F976BDGCEUB",
+  "SM-F976BDGNEUB",
+  "SM-F976BZKBEUB",
+  "SM-F976BZKCEUB",
+  "SM-F976BZKNEUB",
+  "SM-F976BZVBEUB",
+  "SM-F976BZVCEUB",
+  "SM-F976BZVNEUB",
+  "SM-F976BZWBEUB",
+  "SM-F976BZWCEUB",
+  "SM-F976BZWNEUB"
+ ]
+}

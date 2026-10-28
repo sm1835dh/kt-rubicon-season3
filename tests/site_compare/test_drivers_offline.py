@@ -104,3 +104,38 @@ def test_us_pdp_specs_have_groups_and_clean_labels():
     tv = _expected("us_pdp", "tv_s95h__us")
     assert tv["spec_count"] >= 100
     assert all(g and "?" not in label for g, label, _ in tv["spec_sample"])  # no tooltip text glued to labels
+
+
+def test_watchbc_options_use_sellable_skus():
+    uk = _expected("watchbc", "watch9__uk")
+    assert _values(uk, "size") == {"40mm", "44mm"} and _values(uk, "connectivity") == {"bluetooth", "lte"}
+    skus = {o[2] for opts in uk["options"].values() for o in opts}
+    assert all(s.endswith("EUB") and s[10] != "D" for s in skus), skus  # preset codes, not case-only "…ZKDWEU"
+    assert uk["state"]["sku"] == "SM-L340NZKAEUB" and uk["state"]["prices"]["base"] == "£349.00"
+
+
+def test_watchbc_ca_fr_case_size_title():
+    assert "Taille de la valise" in _expected("watchbc", "watch9__ca-fr-qc")["sections"]  # mistranslation kept as-is
+
+
+def test_hubble_laptop_state():
+    uk, fr = _expected("hubble", "laptop_book6_pro__uk"), _expected("hubble", "laptop_book6_pro__ca-fr-on")
+    assert uk["state"]["sku"] == "NP960XJG-KGAUK" and uk["state"]["selection"]["color"] == "Grey"
+    assert fr["state"]["sku"] == "NP960XJG-KG1CA" and fr["state"]["selection"]["color"] == "Gris"
+    assert fr["state"]["prices"]["was"] and fr["state"]["prices"]["monthly"]  # Ontario financing
+
+
+def test_spec_pages_extract_specs():
+    for stem in ("watch9-specpage__uk", "watch9-specpage__ca-fr-qc", "laptop_book6_pro-specpage__uk",
+                 "laptop_book6_pro-specpage__ca-en-on"):
+        e = _expected("pd", stem)
+        assert e["spec_count"] >= 20 and all(len(row) == 3 and row[1] for row in e["spec_sample"]), stem
+
+
+def test_us_buy_pages_state():
+    watch, laptop, fold8 = (_expected("us", f"{p}__us") for p in ("watch9", "laptop_book6_pro", "fold8_ultra"))
+    assert watch["state"]["sku"] == "SM-L340NZKAXAA" and watch["state"]["selection"]["connectivity"] == "bluetooth"
+    assert watch["state"]["prices"]["monthly"] == "$15.83"  # header shows "15.83/mo" without "$"
+    assert _values(watch, "size") == {"40mm", "44mm"} and "casesizingguide" not in _values(watch, "size")
+    assert laptop["state"]["sku"] == "NP960XJG-KG1US" and laptop["state"]["prices"]["was"]
+    assert fold8["state"]["selection"]["carrier"] == "Unlocked"  # Fold8 keeps the summary-line reading

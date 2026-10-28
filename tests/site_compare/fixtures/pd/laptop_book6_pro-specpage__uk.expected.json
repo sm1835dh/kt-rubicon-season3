@@ -1,0 +1,45 @@
+{
+ "options": {},
+ "state": {
+  "selection": {},
+  "sku": "NP960XJG-KGAUK",
+  "prices": {
+   "base": "£2,299.00",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [],
+ "spec_count": 38,
+ "spec_sample": [
+  [
+   "Processor / Chipset",
+   "CPU",
+   "Intel® Core™ Ultra X7 processor 358H"
+  ],
+  [
+   "Processor / Chipset",
+   "GPU",
+   "Intel® Arc™ B390"
+  ],
+  [
+   "Processor / Chipset",
+   "GPU Type",
+   "Shared"
+  ],
+  [
+   "Processor / Chipset",
+   "NPU",
+   "Intel® NPU"
+  ],
+  [
+   "Display",
+   "Size (inch)",
+   "16.0\""
+  ]
+ ],
+ "offers": [
+  "NP960XJG-KGAUK"
+ ]
+}

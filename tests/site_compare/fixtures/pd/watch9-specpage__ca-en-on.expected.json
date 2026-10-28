@@ -1,0 +1,49 @@
+{
+ "options": {
+  "size": [],
+  "connectivity": [],
+  "color": []
+ },
+ "state": {
+  "selection": {},
+  "sku": "SM-L340NZKAXAC",
+  "prices": {
+   "base": "$519.99",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [],
+ "spec_count": 32,
+ "spec_sample": [
+  [
+   "Overview",
+   "Screen Size (Main Display)",
+   "1.3\" (34mm)"
+  ],
+  [
+   "Overview",
+   "Body Weight (g)",
+   "31.5"
+  ],
+  [
+   "Overview",
+   "Bluetooth Version",
+   "Bluetooth v6.0"
+  ],
+  [
+   "Overview",
+   "Sensors",
+   "Accelerometer, Barometer, Bioelectrical Impedance Analysis Sensor, Electrical Heart Sensor, Gyro Sensor, Geomagnetic Sensor, Light Sensor, Optical Heart Rate Sensor, Temperature Sensor"
+  ],
+  [
+   "Overview",
+   "Storage (GB)",
+   "32"
+  ]
+ ],
+ "offers": [
+  "SM-L340NZKAXAC"
+ ]
+}
