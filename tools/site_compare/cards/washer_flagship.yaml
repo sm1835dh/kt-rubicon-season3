@@ -1,0 +1,104 @@
+# 드럼세탁기 최상위 차이점 카드. combo/section은 data.json 기준, highlight는 화면 텍스트(포함 여부로 찾음).
+# 동일 모델 아님: UK는 WF90H(11kg, 2026)와 판매 종료된 WF90F(9kg), 북미는 WF90F53(27" 폭)입니다.
+cards:
+  - id: model-generation
+    title: UK와 북미는 세대·규격이 다른 모델 (동일 모델 아님)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__neatwhite, section: price_bar, highlight: ["Bespoke AI Front-Load Washing Machine Series 9 AI Home 11kg", "WF90H11C4WT1"], caption: "UK WF90H (판매 중)"}
+      - {combo: uk-f__ref, section: price_bar, highlight: ["WF90F09C4SU1", "No longer available"], caption: "UK WF90F (판매 종료)"}
+      - {combo: uk-f__ref, section: dimensions, highlight: ["600 mm", "850 mm"], caption: UK 치수}
+      - {combo: ca-en-on__gray, section: dimensions, highlight: ["686 mm", "984 mm"], caption: CA 치수}
+    observation: |
+      [사실] UK 판매 모델은 WF90H11C4WT1(11 kg, Neat white)입니다. 북미와 같은 F세대인 UK WF90F09C4SU1(9 kg)은 "No longer available"입니다.
+      [사실] 북미는 WF90F53ADSA5(CA 6.1 cu.ft., US 5.3 cu.ft.)입니다. 크기가 UK 600 x 850 x 590 mm(유럽 60 cm 규격), 북미 686 x 984 x 875 mm(27" 규격)로 다릅니다.
+      [사실] 탈수는 UK 1400 rpm, 북미 1200 rpm입니다.
+    note: |
+      동일 모델 아님. 세탁기는 국가 간 같은 모델이 없어 "최상위 드럼세탁기" 같은 역할 단위로만 비교합니다. 용량 단위도 kg(UK)과 cu.ft.(북미)로 다릅니다.
+
+  - id: same-sku-capacity-colour
+    title: 같은 SKU인데 CA는 "6.1 cu.ft. Gray", US는 "5.3 cu.ft. Dark Steel"
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: ca-en-on__gray, section: price_bar, highlight: ["WF90F53ADSA5", "Gray"], caption: CA-EN}
+      - {combo: ca-en-on__gray, section: capacity, highlight: ["6.1 cu.ft."], caption: CA-EN 용량}
+      - {combo: us__darksteel, section: price_bar, highlight: ["5.3 cu.ft.", "WF90F53ADSA5 / WF90F53ADSA5"], caption: US}
+      - {combo: us__darksteel, section: color, highlight: ["Dark Steel"], caption: US 색상}
+    observation: |
+      [사실] 모델 코드 WF90F53ADSA5가 같은데 CA는 용량 "6.1 cu.ft.", 색상 "Gray"이고 US는 "5.3 cu.ft.", "Dark Steel"입니다. URL도 CA "…6-1-cu-ft-gray…", US "…5-3-cu-ft-dark-steel…"입니다.
+      [사실] 치수(27 x 38.7 x 34.4~34.5 in)와 탈수(1200 rpm)는 같습니다. US는 모델 코드를 "WF90F53ADSA5 / WF90F53ADSA5"처럼 같은 값으로 두 번 보여 줍니다.
+      [추정] CA는 IEC 기준 용량, US는 DOE 기준 용량을 씁니다.
+    note: |
+      용량은 {value, unit, standard}로 저장하고, 같은 SKU라도 국가별 값을 따로 둡니다. 색상명도 국가별 표시명(Gray / Dark Steel / Gris)을 따로 두고, SKU 색상 코드(S)를 공통 키로 씁니다.
+
+  - id: ca-fr-spec-units
+    title: CA-FR 스펙의 무게 단위·탈수 속도가 CA-EN과 다름
+    tags: [사이트 데이터 오류, CA-FR 번역]
+    panels:
+      - {combo: ca-en-on__gray, section: spec, highlight: ["102 kg"], caption: CA-EN 무게}
+      - {combo: ca-fr-on__gris, section: spec, highlight: ["102 lbs"], caption: CA-FR 무게}
+      - {combo: ca-en-on__gray, section: spec, highlight: ["1200 rpm"], caption: CA-EN 탈수}
+      - {combo: ca-fr-on__gris, section: spec, highlight: ["1 201 tr/min"], caption: CA-FR 탈수}
+    observation: |
+      [사실] 같은 SKU의 무게가 CA-EN "102 kg", CA-FR "102 lbs"입니다. CA-FR 개요의 "Poids net"는 단위 없이 "102"입니다. US는 "224.9 lbs"(≈102 kg)이므로 CA-FR의 lbs 표기가 틀렸습니다.
+      [사실] 탈수 속도는 CA-EN "1200 rpm", US "1200", CA-FR "1 201 tr/min"입니다.
+      [사실] CA-FR에는 세탁 용량 스펙 항목이 없습니다(CA-EN "Washing Capacity 6.1 cu.ft").
+    note: |
+      CA-FR 스펙은 CA-EN 값과 교차 검증한 뒤 씁니다. 단위가 다르면 EN 값을 우선합니다. 무게는 kg으로 정규화하고, 값 범위(세탁기 60~120 kg)로 단위를 검증합니다.
+
+  - id: uk-discontinued
+    title: UK 판매 종료 표시 (색상 하나와 이전 세대 전체)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__darksteel, section: price_bar, highlight: ["WF90H11C4ST1", "No longer available"], caption: "UK WF90H Dark steel"}
+      - {combo: uk__darksteel, section: color, highlight: ["Dark steel", "Neat white"], caption: 색상 선택}
+      - {combo: uk-f__ref, section: summary, highlight: ["Product information sheet", "No longer available"], caption: UK WF90F 요약}
+    observation: |
+      [사실] UK WF90H의 Dark steel(WF90H11C4ST1)은 "No longer available"인데, Neat white 페이지의 색상 선택에는 그대로 나옵니다. 고르면 가격 없이 판매 종료 화면이 됩니다.
+      [사실] 판매 종료된 WF90F09C4SU1 페이지도 스펙·에너지 라벨(A)·제품 정보 시트가 그대로 남아 있습니다.
+    note: |
+      판매 상태(status: on_sale | discontinued)를 SKU 단위로 저장합니다. 판매 종료 SKU는 스펙 질문에는 답하고, 가격·구매 질문에서는 제외합니다.
+
+  - id: us-colour-pricing
+    title: US 색상별로 판매가는 같고 정가·할인액·배송일이 다름
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: us__darksteel, section: price_bar, highlight: ["$1,299.00", "Comp. Value: $1,678.99"], caption: Dark Steel}
+      - {combo: us__ivory, section: price_bar, highlight: ["$1,299.00", "Comp. Value: $1,578.99"], caption: Ivory}
+      - {combo: us__darksteel, section: delivery, highlight: ["Get it by Nov. 24"], caption: Dark Steel 배송}
+      - {combo: us__ivory, section: delivery, highlight: ["Get it by Oct. 30"], caption: Ivory 배송}
+    observation: |
+      [사실] US 판매가는 Dark Steel·Ivory 모두 $1,299.00입니다. 주문 요약의 시작 가격은 $1,649.00 / $1,549.00, Instant Savings는 $350.00 / $250.00으로 다릅니다.
+      [사실] Comp. Value($1,678.99 / $1,578.99)는 시작 가격 + 설치비 원가 $29.99입니다(냉장고와 같은 패턴).
+      [사실] ZIP 10001 배송 예정일이 Dark Steel "Nov. 24", Ivory "Oct. 30"입니다.
+    note: |
+      US는 색상 SKU마다 list_price와 할인액이 다릅니다. 판매가만 보고 같은 가격 구조라고 판단하지 않습니다. 배송 예정일은 재고 정보로, 제품 속성으로 저장하지 않습니다.
+
+  - id: price-and-financing
+    title: 가격·할부 표기 (UK RRP, CA 36개월, 퀘벡·CA-FR 할부 없음)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__neatwhite, section: price_bar, highlight: ["£1,049.00", "RRP: £1,149.00"], caption: UK}
+      - {combo: ca-en-on__gray, section: price_bar, highlight: ["From $41.67/mo for 36 mos or $1,499.99"], caption: CA-EN Ontario}
+      - {combo: ca-en-qc__gray, section: price_bar, highlight: ["$1,499.99"], caption: CA-EN Quebec}
+      - {combo: ca-fr-on__gris, section: price_bar, highlight: ["1 499,99 $"], caption: CA-FR Ontario}
+    observation: |
+      [사실] UK는 "£1,049.00 / RRP: £1,149.00 / Save £100.00"이고 상단에 "Free Install" 배지가 있습니다.
+      [사실] CA-EN Ontario는 "From $41.67/mo for 36 mos or $1,499.99"입니다. Quebec와 CA-FR Ontario는 월 할부 없이 가격만 보여 줍니다. Quebec 가격은 Ontario와 같습니다.
+      [사실] CA는 정가·할인 표시가 없습니다(정가 = 판매가). US는 $1,299.00(Comp. Value $1,678.99)입니다.
+    note: |
+      TV·냉장고·세탁기 모두 CA-FR Ontario 제품 페이지에는 월 할부가 없습니다. CA 할부 정보는 CA-EN 페이지에서 수집합니다.
+
+  - id: dryer-pairing
+    title: 건조기 함께 사기 제안 방식
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: ca-en-on__gray, section: add_on, highlight: ["DV90F53AESAC", "$1,499.99"], caption: CA-EN 추가 상품}
+      - {combo: us__darksteel, section: color, highlight: ["Complete your laundry", "21% OFF"], caption: US 색상 아래}
+      - {combo: uk__neatwhite, section: offers, highlight: ["Save 20% off 3 or 15% off 2 Home Appliances"], caption: UK 오퍼}
+    observation: |
+      [사실] CA는 "Add-on Items"에 짝 건조기 DV90F53AESAC($1,499.99, 할인 없음)를 보여 줍니다.
+      [사실] US는 색상 선택 바로 아래 "Complete your laundry"에 전기 건조기 $1,299.00(21% OFF)·가스 건조기 $1,399.00(20% OFF)을 보여 줍니다.
+      [사실] UK는 짝 제품 대신 "가전 3개 20% / 2개 15% 할인" 묶음 오퍼를 보여 줍니다.
+    note: |
+      짝 제품 추천(paired_product)과 묶음 할인(bundle_offer)을 구분해 저장합니다. US는 색상 SKU마다 추천 건조기 할인율이 다릅니다(Ivory는 16%·15%).
