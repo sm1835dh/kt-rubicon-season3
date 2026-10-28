@@ -114,6 +114,12 @@ def test_watchbc_options_use_sellable_skus():
     assert uk["state"]["sku"] == "SM-L340NZKAEUB" and uk["state"]["prices"]["base"] == "£349.00"
 
 
+def test_watchbc_band_selection_reads_analytics_label():
+    for ctx in ("uk", "ca-fr-on"):  # band inputs carry the band size in data-modeldisplay; an-la has the value
+        sel = _expected("watchbc", f"watch9__{ctx}")["state"]["selection"]
+        assert (sel["band_type"], sel["band_color"], sel["band_size"]) == ("Sport Band", "Black", "S/M")
+
+
 def test_watchbc_ca_fr_case_size_title():
     assert "Taille de la valise" in _expected("watchbc", "watch9__ca-fr-qc")["sections"]  # mistranslation kept as-is
 

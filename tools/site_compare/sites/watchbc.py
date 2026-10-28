@@ -26,7 +26,9 @@ _STATE_JS = r"""
     const grp = q(`.watch-bc-option__option[data-type-code='${code}']`);
     if (!grp) continue;
     const i = grp.querySelector('input:checked') || (grp.querySelector('.is-checked input'));
-    if (i) sel[axis] = (i.dataset.modeldisplay || i.value || '').trim();
+    // band inputs carry the band size in data-modeldisplay; their value is in an-la ("band color:Black")
+    const an = code.startsWith('B-') && (i && i.getAttribute('an-la') || '').split(':').slice(1).join(':');
+    if (i) sel[axis] = (an || i.dataset.modeldisplay || i.value || '').trim();
   }
   return {sel, sku: t(q('.total-summary .model-code')), base: t(q('strong.bar-total-price')),
           was: (() => { const e = q('.bar-was-price'); return e && e.offsetParent ? t(e) : null; })(),
