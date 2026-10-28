@@ -231,3 +231,18 @@ def test_key_spec_patterns_are_tried_in_order(tmp_path):
     html = build_report(_run_dir(tmp_path, [ref]), product, _cards(tmp_path)).read_text(encoding="utf-8")
     row = _row(html[html.index('id="key-specs"'):], "소음")
     assert "72 dB" in row and ">A<" not in row
+
+
+def test_same_sku_in_another_country_keeps_its_own_row(tmp_path):
+    ca = Context("ca-en-on", "CA-EN", "pd", "https://www.samsung.com/ca/x/", "en-CA", "CAD", ref_sku="WF90")
+    us = Context("us", "US", "us_pdp", "https://www.samsung.com/us/x/", "en-US", "USD", ref_sku="WF90")
+    uk = Context("uk", "UK", "pd", "https://www.samsung.com/uk/x/", "en-GB", "GBP", ref_sku="WF90H")
+    a, b = _res(ca, "gray", "$1,499.99", ref=True), _res(us, "darksteel", "$1,299.00", ref=True)
+    c = _res(uk, "darksteel", "£1.00", ref=True)
+    a.got.sku = b.got.sku = "WF90F53ADSA5"  # CA calls it Gray, US calls it Dark Steel
+    product = Product("demo", "Demo", [uk, ca, us], sections=SECTIONS, mode="discover", key_specs=KEY)
+    html = build_report(_run_dir(tmp_path, [c, a, b], contexts=(uk, ca, us)), product, _cards(tmp_path)).read_text(
+        encoding="utf-8")
+    table = html[html.index('id="price-table"'):]
+    table = table[:table.index("</table>")]
+    assert "$1,299.00" in _row(table, "darksteel") and "$1,299.00" not in _row(table, "gray")

@@ -295,7 +295,7 @@ def _walk_path(page, driver, product: Product, ctx: Context, path: list[Option],
 
 def _off_target(combo: Combo, got: State) -> list[str]:
     off = []
-    if combo.target_sku and got.sku and norm_value(got.sku) != norm_value(combo.target_sku):
+    if combo.target_sku and norm_value(got.sku or "") != norm_value(combo.target_sku):  # no SKU shown = unverified
         off.append(f"sku mismatch: want={combo.target_sku} got={got.sku}")
     off += [f"selection mismatch: {o.axis} want={o.label} got={got.selection.get(o.axis)}"
             for o in combo.path if o.axis in got.selection and not _matches(o, got.selection[o.axis])]
@@ -344,7 +344,10 @@ def discover_leaves(browser_context, driver, product: Product, ctx: Context, wai
                 leaves.append(Combo(combo_id(ctx.id, path), ctx.id, "main", {p.axis: p.label for p in path}, path,
                                     o.sku, combo_key(path)))
             else:
-                walk(prefix + [o])
+                try:
+                    walk(prefix + [o])
+                except Exception as e:  # a sold-out or broken branch must not drop the leaves found elsewhere
+                    warnings.append(f"discover: skipped {o.axis} {o.label!r}: {type(e).__name__}: {e}")
 
     walk([])
     ref = [l for l in leaves if l.target_sku and ctx.ref_sku and norm_value(l.target_sku) == norm_value(ctx.ref_sku)]
@@ -402,8 +405,8 @@ def capture_leaf(browser_context, driver, product: Product, ctx: Context, combo:
         base = parse_money(got.prices.base, ctx.locale, ctx.currency)
         offer = extract_offers(page.content()).get((got.sku or "").upper())
         match = price_matches(base, offer)
-        if status == "ok" and base is None and not sections and not specs:
-            status = "error"
+        if status in ("ok", "mismatch") and base is None and not sections and not specs:
+            status = "error"  # a blank page also shows no SKU: "nothing captured" is the real finding
             warnings.append("nothing captured")
     except Exception as e:
         status = "error"
@@ -431,6 +434,8 @@ def capture_specs_page(browser_context, ctx: Context, result: ComboResult, run_d
         result.spec_shots = _spec_shots(page, run_dir, result.combo_id, boxes, result.warnings)
         if not specs:
             result.warnings.append(f"no specs on {ctx.spec_url}")
+    except Exception as e:  # e.g. the page reloads itself mid-read: keep the buy-page result
+        result.warnings.append(f"spec page failed: {type(e).__name__}: {e}")
     finally:
         page.close()
 
@@ -526,13 +531,19 @@ def run_capture(product: Product, out_root: Path, only: set[str] | None, headed:
             if only and ctx.id not in only:
                 continue
             print(f"[{ctx.id}] {ctx.url}", flush=True)
-            driver = get_driver(ctx.driver)
-            if product.mode == "click":
-                mine = [c for c in combos if c.context_id == ctx.id]
-                results = capture_context(browser, driver, product, ctx, mine, run_dir, wait_ms)
-            else:
-                results, n = capture_discover_context(browser, driver, product, ctx, run_dir, wait_ms)
-                run.discovered[ctx.id] = n
+            try:
+                driver = get_driver(ctx.driver)
+                if product.mode == "click":
+                    mine = [c for c in combos if c.context_id == ctx.id]
+                    results = capture_context(browser, driver, product, ctx, mine, run_dir, wait_ms)
+                else:
+                    results, n = capture_discover_context(browser, driver, product, ctx, run_dir, wait_ms)
+                    run.discovered[ctx.id] = n
+            except Exception as e:  # one country failing must not cost the others (or the data.json)
+                print(f"  context failed: {type(e).__name__}: {e}", flush=True)
+                results = [ComboResult(f"{ctx.id}__ref", ctx.id, "main", {}, None, None, "error", None, None, None,
+                                       [], [], [], [f"context failed: {type(e).__name__}: {e}"],
+                                       now_kst().isoformat(timespec="seconds"), key=combo_key([]), is_ref=True)]
             run.results = [r for r in run.results if r.context_id != ctx.id] + results
             run.results.sort(key=lambda r: order.get(r.context_id, len(order)))  # stable: combo order kept
             run.to_json(run_dir / "data.json")

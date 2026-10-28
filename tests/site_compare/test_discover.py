@@ -10,7 +10,7 @@ from tools.site_compare.capture import (
 )
 from tools.site_compare.model import AxisSpec, Context, Option, PriceTexts, Product, SectionRule, SpecItem, State
 from tools.site_compare.pngsize import png_size
-from tools.site_compare.sites.base import BaseDriver
+from tools.site_compare.sites.base import BaseDriver, OptionUnavailable
 
 FIXTURE = (Path(__file__).parent / "fixtures" / "fake_pdp.html").resolve().as_uri()
 WAIT = 300
@@ -280,3 +280,38 @@ def test_click_path_retried_once_on_mismatch(bctx, tmp_path):
     r = _capture(bctx, tmp_path, product, leaves[0], driver)  # 55": first click lost, page stays on 65"
     assert r.status == "ok" and r.got.sku == "P55B", r.warnings
     assert any(w.startswith("retried:") for w in r.warnings)
+
+
+class RefusingDriver(FakePdpDriver):
+    """Like pd/watchbc/us_pdp: choose() refuses an option the page marks unavailable."""
+
+    def choose(self, page, ctx, option):
+        if not option.available:
+            raise OptionUnavailable(f"{option.axis} {option.label} is marked unavailable")
+        super().choose(page, ctx, option)
+
+
+def test_unavailable_middle_option_skips_only_its_branch(bctx):
+    _, leaves, warnings = _leaves(bctx, [AxisSpec("size", iterate=True), AxisSpec("color", fixed="White")],
+                                  RefusingDriver())
+    assert [l.target_sku for l in leaves] == ["P55W", "P65W"]  # 77" is sold out: its branch only is skipped
+    assert any('77"' in w and "OptionUnavailable" in w for w in warnings), warnings
+
+
+class NoSkuDriver(FakePdpDriver):
+    """The page never shows a SKU or a selection, and ignores the SKU in the URL."""
+
+    def sku_url(self, ctx, sku):
+        return ctx.url
+
+    def read_state(self, page, ctx, product):
+        st = super().read_state(page, ctx, product)
+        st.sku, st.selection = None, {}
+        return st
+
+
+def test_unreadable_sku_is_a_mismatch(bctx, tmp_path):
+    product, leaves, _ = _leaves(bctx, [])
+    leaves[0].target_sku = "P77B"  # the page stays on the default 65" and shows no SKU to check against
+    r = _capture(bctx, tmp_path, product, leaves[0], NoSkuDriver())
+    assert r.status == "mismatch" and "sku mismatch: want=P77B got=None" in r.warnings

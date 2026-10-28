@@ -54,6 +54,8 @@ uv pip install --python .venv/bin/python -r requirements.txt
 
 모든 드라이버는 `sites/base.py`의 `BaseDriver`를 상속합니다.
 
+> **제한:** `hubble`은 아직 `options`/`choose`(옵션 발견)가 없습니다. 노트북은 기준 구성 1개(`axes: []`)로 수집합니다. hubble 컨텍스트에 축을 넣으려면 `RADIO_GROUPS`를 이용해 두 메서드를 먼저 구현해야 합니다. 그 전에는 "no … options" 경고와 함께 error 행 1개만 남습니다.
+
 | 메서드 | 하는 일 |
 |---|---|
 | `prepare` | 배너·지역 처리 |
