@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from .config import map_section
+from .config import context_axes, map_section
 from .model import ComboResult, Product, RunData, Shot
 
 TAGS = ("국가별 구성 차이", "사이트 데이터 오류", "소스 vs 화면 불일치", "CA-FR 번역")
@@ -240,6 +240,14 @@ def _menu_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
     return rows
 
 
+def _axes_text(product: Product, ctx) -> str:
+    if ctx.spec_only:
+        return "스펙만 (판매 종료)"
+    parts = [f"{a.name} 전체" if a.iterate else f"{a.name} {a.fixed} 고정"
+             for a in context_axes(product, ctx) if a.iterate or a.fixed]
+    return " · ".join(parts) or "기준 구성 1개"
+
+
 def build_report(run_dir: Path, product: Product, cards_path: Path) -> Path:
     run_dir = Path(run_dir)
     run = RunData.from_json(run_dir / "data.json")
@@ -263,6 +271,7 @@ def build_report(run_dir: Path, product: Product, cards_path: Path) -> Path:
         price_rows=_price_rows(run, product, cols), key_spec_rows=_key_spec_rows(run, product, cols),
         menu_rows=_menu_rows(run, product, cols), colors=list(product.colors),
         sec_labels={s.id: s.label_ko for s in product.sections},
+        ctx_axes={c.id: _axes_text(product, c) for c in run.contexts},
     )
     out = run_dir / "report.html"
     out.write_text(html, encoding="utf-8")

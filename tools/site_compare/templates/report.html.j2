@@ -89,15 +89,21 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
     <ul style="margin:6px 0 10px; padding-left:18px">
       <li>페이지 로드 후, 옵션 클릭 후 각각 {{ (run.wait_ms / 1000)|round(1) }}초 대기. 가격이 비어 있으면 한 번 더 대기</li>
       <li>쿠키 배너는 거부·필수만 버튼으로 닫음. 트레이드인 Yes·장바구니·로그인은 누르지 않음</li>
+      {% if product.mode == "click" %}
       <li>색상은 {{ product.fixed_color }} 고정. 색상별 가격은 {{ product.storages[0] }}에서만 확인</li>
       <li>US 통신사는 {{ product.carriers|join(", ") }}. Verizon 하위 선택은 페이지 기본값</li>
       <li>가격 표의 기준 가격은 선택한 용량의 기기 일시불 가격(추가 옵션 없음)</li>
+      {% else %}
+      <li>조합: 가격이 달라지는 옵션의 값을 페이지에서 찾아 모두 캡쳐(아래 표의 "조합 축"). 고정 축은 그 값만 선택</li>
+      <li>가격 표의 가격은 각 조합의 기기 일시불 가격(추가 옵션 없음). 주요 스펙 표와 카드는 기준 SKU 조합 기준</li>
+      {% endif %}
     </ul>
     <div class="scroll"><table>
-      <thead><tr><th>구분</th><th>URL</th><th>지역</th></tr></thead>
+      <thead><tr><th>구분</th><th>URL</th><th>지역</th>{% if product.mode != "click" %}<th>기준 SKU</th><th>조합 축</th>{% endif %}</tr></thead>
       <tbody>
       {% for c in run.contexts %}
-        <tr><td>{{ c.label }}</td><td><a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.url }}</a></td><td>{{ c.region or "—" }}</td></tr>
+        <tr><td>{{ c.label }}</td><td><a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.url }}</a></td><td>{{ c.region or "—" }}</td>
+          {% if product.mode != "click" %}<td>{{ c.ref_sku or "—" }}</td><td>{{ ctx_axes[c.id] }}</td>{% endif %}</tr>
       {% endfor %}
       </tbody>
     </table></div>

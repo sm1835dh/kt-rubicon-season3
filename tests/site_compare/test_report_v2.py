@@ -148,3 +148,17 @@ def test_build_remaps_section_titles_with_current_rules(tmp_path):
     html = build_report(d, product, cards).read_text(encoding="utf-8")
     assert "section not found" not in html and "highlight not found" not in html
     assert '<th scope="row">직접 구매 혜택</th>' in html  # menu table row uses the rule's label
+
+
+def test_discover_rules_describe_axes_and_ref_skus(tmp_path):
+    from tools.site_compare.model import AxisSpec
+    us = Context("us", "US", "us_pdp", "https://www.samsung.com/us/x/", "en-US", "USD", ref_sku="US77",
+                 axes=[AxisSpec("depth", iterate=True)])
+    product = Product("demo", "Demo", [UK, UKF, us], sections=SECTIONS, mode="discover", key_specs=KEY,
+                      axes=[AxisSpec("size", iterate=True), AxisSpec("color", fixed="Graphite")])
+    d = _run_dir(tmp_path, [_res(UK, "77", "£1.00", ref=True)], contexts=(UK, UKF, us))
+    html = build_report(d, product, _cards(tmp_path)).read_text(encoding="utf-8")
+    rules = html[html.index("캡쳐 규칙"):html.index("</table>", html.index("캡쳐 규칙"))]
+    assert "통신사" not in rules and "용량의" not in rules  # Fold8 (click mode) wording stays out
+    assert "size 전체 · color Graphite 고정" in rules and "depth 전체" in rules and "스펙만" in rules
+    assert "<td>UK77</td>" in rules and "<td>US77</td>" in rules
