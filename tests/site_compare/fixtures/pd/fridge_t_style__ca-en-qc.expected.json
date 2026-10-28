@@ -1,0 +1,63 @@
+{
+ "options": {
+  "color": [
+   [
+    "silver",
+    "Silver",
+    "RF23DG9600SRAC",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Silver"
+  },
+  "sku": "RF23DG9600SRAC",
+  "prices": {
+   "base": "$3,299.98",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Choose your Colour",
+  "Choose your Capacity",
+  "Dimensions",
+  "Samsung Care+",
+  "Pre-purchase check",
+  "Offers"
+ ],
+ "spec_count": 44,
+ "spec_sample": [
+  [
+   "Overview",
+   "Cooling Type",
+   "Triple Cooling"
+  ],
+  [
+   "Overview",
+   "Net Weight (kg)",
+   "137 kg"
+  ],
+  [
+   "Bottom Left",
+   "Shelf",
+   "2 EA"
+  ],
+  [
+   "Bottom Left",
+   "Box",
+   "1 EA"
+  ],
+  [
+   "Bottom Left",
+   "Door Pocket",
+   "3 EA"
+  ]
+ ],
+ "offers": [
+  "RF23DG9600SRAC"
+ ]
+}

@@ -1,0 +1,63 @@
+{
+ "options": {
+  "color": [
+   [
+    "gray",
+    "Gray",
+    "WF90F53ADSA5",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Gray"
+  },
+  "sku": "WF90F53ADSA5",
+  "prices": {
+   "base": "$1,499.99",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Choose your Colour",
+  "Choose your Capacity",
+  "Dimensions",
+  "Samsung Care+",
+  "Add-on Items",
+  "Pre-purchase check"
+ ],
+ "spec_count": 47,
+ "spec_sample": [
+  [
+   "Overview",
+   "Energy Efficiency Class",
+   "Tier 3 (Advanced Tier)"
+  ],
+  [
+   "Overview",
+   "VRT",
+   "AI VRT+"
+  ],
+  [
+   "Overview",
+   "Physical specifications & size",
+   "686 x 984 x 875 mm (27 x 38.7 x 34.5 inches)"
+  ],
+  [
+   "Overview",
+   "Net Weight",
+   "102 kg"
+  ],
+  [
+   "Washing Capacity",
+   "Washing Capacity",
+   "6.1 cu.ft"
+  ]
+ ],
+ "offers": [
+  "WF90F53ADSA5"
+ ]
+}

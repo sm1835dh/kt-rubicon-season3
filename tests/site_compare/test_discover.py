@@ -164,8 +164,8 @@ def test_full_shots_are_sliced(bctx, tmp_path):
     (tmp_path / "shots").mkdir()
     paths = full_shots(page, tmp_path, "x")
     page.close()
-    assert len(paths) == 3
-    assert all(png_size(tmp_path / p)[1] <= 8000 for p in paths)
+    assert len(paths) == 5  # 20,000px page in ≤4,000px slices (tall clips render shifted in Chrome)
+    assert all(png_size(tmp_path / p)[1] <= 4000 for p in paths)
 
 
 def test_clip_clamped_to_page_width(bctx, tmp_path):
@@ -194,3 +194,33 @@ def test_png_size(tmp_path):
     f = tmp_path / "a.png"
     f.write_bytes(base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="))
     assert png_size(f) == (1, 1)
+
+
+class FlakyPriceDriver(FakePdpDriver):
+    """Price stays empty until the page has been reloaded once (simulates a throttled price API)."""
+
+    def read_state(self, page, ctx, product):
+        st = super().read_state(page, ctx, product)
+        if not page.evaluate("performance.getEntriesByType('navigation')[0].type === 'reload'"):
+            st.prices.base = None
+        return st
+
+
+def test_price_missing_triggers_one_reload(bctx, tmp_path):
+    product, leaves, _ = _leaves(bctx, [AxisSpec("size", iterate=True)])
+    r = _capture(bctx, tmp_path, product, leaves[1], FlakyPriceDriver())
+    assert r.status == "ok" and r.base.value == 2000.0, r.warnings
+    assert "price not rendered" not in r.warnings and any("reloaded" in w for w in r.warnings)
+
+
+class TallSpecDriver(FakePdpDriver):
+    def specs(self, page):
+        items, _ = super().specs(page)
+        return items, [("Specs", (0, 100, 1440, 7000))]
+
+
+def test_tall_spec_box_is_split(bctx, tmp_path):
+    product, leaves, _ = _leaves(bctx, [])
+    r = _capture(bctx, tmp_path, product, leaves[0], TallSpecDriver())
+    assert len(r.spec_shots) == 3 and all(s.height <= 3000 for s in r.spec_shots)
+    assert [s.title for s in r.spec_shots] == ["Specs (1/3)", "Specs (2/3)", "Specs (3/3)"]

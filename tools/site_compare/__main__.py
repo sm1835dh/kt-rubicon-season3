@@ -41,6 +41,10 @@ def main(argv: list[str] | None = None) -> None:
     b = sub.add_parser("build", help="rebuild report.html from a captured run")
     b.add_argument("product")
     b.add_argument("--run", default="latest")
+    s = sub.add_parser("snapshot", help="save trimmed DOM fixtures + expected driver output for offline tests")
+    s.add_argument("product")
+    s.add_argument("--only", help="comma-separated context ids")
+    s.add_argument("--wait-ms", type=int, default=5000)
     args = ap.parse_args(argv)
 
     product = load_product(_product_path(args.product))
@@ -50,6 +54,9 @@ def main(argv: list[str] | None = None) -> None:
         run_dir = run_capture(product, OUT_ROOT, only, args.headed, args.wait_ms)
         print(f"data: {(run_dir / 'data.json').resolve()}")
         _build(product, run_dir)
+    elif args.cmd == "snapshot":
+        from .snapshot import snapshot_product
+        snapshot_product(product, set(args.only.split(",")) if args.only else None, args.wait_ms)
     else:
         _build(product, _resolve_run(product.id, args.run))
 

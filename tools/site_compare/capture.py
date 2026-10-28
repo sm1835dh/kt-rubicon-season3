@@ -21,7 +21,8 @@ REGIONS = {"CA-ON": {"ontario"}, "CA-QC": {"quebec", "québec"}}
 # TrustArc consent stored up front: the consent click reloads UK/CA pages and breaks the capture.
 CONSENT_COOKIES = {"notice_preferences": "0:", "notice_gdpr_prefs": "0::implied,eu",
                    "notice_behavior": "implied,eu", "cmapi_cookie_privacy": "permit 1 required"}
-SLICE_PX = 8000  # Chrome renders one full-page capture wrongly past ~16k px
+SLICE_PX = 4000  # one full-page capture breaks past ~16k px, and tall clips deep in a page render shifted
+SPEC_SLICE_PX = 3000
 
 _TEXT_BOXES_JS = r"""
 ([x, y, w, h]) => {
@@ -83,7 +84,8 @@ def collect_text_boxes(page, box: Box) -> list[TextBox]:
 
 
 def page_size(page) -> tuple[float, float]:
-    return tuple(page.evaluate("[document.documentElement.scrollWidth, document.documentElement.scrollHeight]"))
+    return tuple(page.evaluate("[Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),"
+                               " Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)]"))
 
 
 def scroll_through(page, step: int = 800, pause_ms: int = 250, limit: int = 20000) -> None:
@@ -132,13 +134,22 @@ def _site_prefix(url: str) -> str:
     return f"{u.scheme}://{u.netloc}/{first}/"
 
 
-def _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings) -> State:
+def _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings, reload_ok: bool = False) -> State:
+    """Wait once more for a missing price; in discover mode (state is in the URL) also reload once —
+    prices sometimes never render when many pages are opened in a row."""
+    missing = lambda st: not _has_price(st.prices.base, ctx.locale) and st.available is not False
     got = driver.read_state(page, ctx, product)
-    if not _has_price(got.prices.base, ctx.locale) and got.available is not False:
+    if missing(got):
         page.wait_for_timeout(wait_ms)
         got = driver.read_state(page, ctx, product)
-        if not _has_price(got.prices.base, ctx.locale) and got.available is not False:
-            warnings.append("price not rendered")
+    if missing(got) and reload_ok:
+        page.reload(wait_until="domcontentloaded", timeout=90000)
+        page.wait_for_timeout(wait_ms)
+        warnings += [f"prepare: {w}" for w in driver.prepare(page, ctx)]
+        got = driver.read_state(page, ctx, product)
+        warnings.append("reloaded: price was missing")
+    if missing(got):
+        warnings.append("price not rendered")
     return got
 
 
@@ -164,11 +175,27 @@ def _capture_page(page, driver, product, name: str, run_dir: Path, with_extras: 
         finally:
             driver.close_extras(page)
     specs, boxes = _specs(page, driver, warnings)
-    for n, (title, box) in enumerate(boxes, 1):
-        s = _shot(page, run_dir, f"{name}__spec-{n}", title, None, n, box, warnings)
-        if s:
-            spec_shots.append(s)
+    spec_shots = _spec_shots(page, run_dir, name, boxes, warnings)
     return sections, extras, specs, spec_shots
+
+
+def split_box(box: Box, max_h: float = SPEC_SLICE_PX) -> list[Box]:
+    x, y, w, h = box
+    n = max(1, -(-int(h) // int(max_h)))
+    step = h / n
+    return [(x, y + i * step, w, step) for i in range(n)]
+
+
+def _spec_shots(page, run_dir: Path, name: str, boxes, warnings: list[str]) -> list[Shot]:
+    shots: list[Shot] = []
+    for title, box in boxes:
+        parts = split_box(box)
+        for i, part in enumerate(parts, 1):
+            label = f"{title} ({i}/{len(parts)})" if len(parts) > 1 else title
+            s = _shot(page, run_dir, f"{name}__spec-{len(shots) + 1}", label, None, len(shots) + 1, part, warnings)
+            if s:
+                shots.append(s)
+    return shots
 
 
 def _specs(page, driver, warnings) -> tuple[list[SpecItem], list[tuple[str, Box]]]:
@@ -319,7 +346,7 @@ def capture_leaf(browser_context, driver, product: Product, ctx: Context, combo:
                 except OptionUnavailable as e:
                     refused.append(f"unavailable: {e}")
                 page.wait_for_timeout(wait_ms)
-        got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings)
+        got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings, reload_ok=True)
         off = []
         if combo.target_sku and got.sku and norm_value(got.sku) != norm_value(combo.target_sku):
             off.append(f"sku mismatch: want={combo.target_sku} got={got.sku}")
@@ -369,10 +396,7 @@ def capture_specs_page(browser_context, ctx: Context, result: ComboResult, run_d
         scroll_through(page, limit=80000)
         specs, boxes = _specs(page, driver, result.warnings)
         result.specs = specs
-        for n, (title, box) in enumerate(boxes, 1):
-            s = _shot(page, run_dir, f"{result.combo_id}__spec-{n}", title, None, n, box, result.warnings)
-            if s:
-                result.spec_shots.append(s)
+        result.spec_shots = _spec_shots(page, run_dir, result.combo_id, boxes, result.warnings)
         if not specs:
             result.warnings.append(f"no specs on {ctx.spec_url}")
     finally:

@@ -1,0 +1,68 @@
+{
+ "options": {
+  "color": [
+   [
+    "darksteel",
+    "Dark steel",
+    "WF90H11C4ST1",
+    true
+   ],
+   [
+    "neatwhite",
+    "Neat white",
+    "WF90H11C4WT1",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Neat white"
+  },
+  "sku": "WF90H11C4WT1",
+  "prices": {
+   "base": "£1,049.00",
+   "monthly": null,
+   "was": "£1,149.00"
+  },
+  "available": true
+ },
+ "sections": [
+  "Choose your Colour",
+  "Choose your Capacity",
+  "Want up to £100.00 off? Recycle your old appliance for an instant discount. Learn more",
+  "Pre-purchase check",
+  "Offers"
+ ],
+ "spec_count": 68,
+ "spec_sample": [
+  [
+   "Overview",
+   "Washing Capacity (kg)",
+   "11 kg"
+  ],
+  [
+   "Overview",
+   "Bubble technology",
+   "Bubble technology"
+  ],
+  [
+   "Overview",
+   "VRT",
+   "VRT+"
+  ],
+  [
+   "Overview",
+   "Energy Efficiency Class",
+   "A"
+  ],
+  [
+   "Overview",
+   "Net Dimension (WxHxD)",
+   "600 x 850 x 590 mm"
+  ]
+ ],
+ "offers": [
+  "WF90H11C4WT1"
+ ]
+}

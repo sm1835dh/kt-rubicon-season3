@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import sync_playwright
 
-from tools.site_compare.capture import VIEWPORT, capture_combo, norm_region
+from tools.site_compare.capture import VIEWPORT, capture_combo, norm_region, preset_cookies
 from tools.site_compare.config import load_product
 from tools.site_compare.model import Combo
 from tools.site_compare.sites import get_driver
@@ -20,7 +20,9 @@ def _capture(tmp_path, ctx_id, want):
     (tmp_path / "shots").mkdir(exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome", headless=True)
-        page = browser.new_context(viewport=VIEWPORT).new_page()
+        bctx = browser.new_context(viewport=VIEWPORT)
+        preset_cookies(bctx, ctx)  # same as capture_context
+        page = bctx.new_page()
         page.goto(ctx.url, wait_until="domcontentloaded", timeout=90000)
         page.wait_for_timeout(WAIT)
         prep = driver.prepare(page, ctx)
@@ -53,10 +55,15 @@ def test_hubble_live_combo(tmp_path, ctx_id, storage):
 @pytest.mark.live
 @pytest.mark.parametrize("carrier,suffix", [("Unlocked", "XAA"), ("Verizon", "VZW")])
 def test_us_live_combo(tmp_path, carrier, suffix):
-    r = _capture(tmp_path, "us", {"storage": "512GB", "color": "Graphite", "carrier": carrier})
+    # 2026-10-29: the site stopped offering carrier tiles for 512GB, so the carrier check uses 256GB
+    r = _capture(tmp_path, "us", {"storage": "256GB", "color": "Graphite", "carrier": carrier})
     print(r.status, r.got, r.warnings, [(s.title, s.section_id) for s in r.sections], [s.title for s in r.extras])
+    if carrier != "Unlocked" and r.status == "unavailable":
+        # 2026-10-29: the site shows only the Unlocked tile for Graphite; "unavailable" needs the site's evidence
+        assert any("not offered" in w or "unavailable for" in w for w in r.warnings), r.warnings
+        return
     assert r.status == "ok", r.warnings
-    assert r.got.sku == f"SM-F976UZKE{suffix}" and r.got.selection["carrier"] == carrier
+    assert r.got.sku == f"SM-F976UZKA{suffix}" and r.got.selection["carrier"] == carrier
     assert r.base is not None
     if carrier == "Unlocked":
         assert r.price_match is True

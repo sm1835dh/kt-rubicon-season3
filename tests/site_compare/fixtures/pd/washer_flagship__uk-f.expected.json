@@ -1,0 +1,48 @@
+{
+ "options": {},
+ "state": {
+  "selection": {},
+  "sku": "WF90F09C4SU1",
+  "prices": {
+   "base": null,
+   "monthly": null,
+   "was": null
+  },
+  "available": false
+ },
+ "sections": [
+  "Choose your Colour",
+  "Choose your Capacity",
+  "Dimensions",
+  "Pre-purchase check"
+ ],
+ "spec_count": 69,
+ "spec_sample": [
+  [
+   "Overview",
+   "Washing Capacity (kg)",
+   "9.0 kg"
+  ],
+  [
+   "Overview",
+   "Bubble technology",
+   "Bubble technology"
+  ],
+  [
+   "Overview",
+   "Energy Efficiency Class",
+   "A"
+  ],
+  [
+   "Overview",
+   "Net Dimension (WxHxD)",
+   "600 x 850 x 600 mm"
+  ],
+  [
+   "Overview",
+   "Net Weight",
+   "75 kg"
+  ]
+ ],
+ "offers": []
+}

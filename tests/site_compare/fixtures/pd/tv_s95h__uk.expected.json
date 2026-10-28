@@ -1,0 +1,80 @@
+{
+ "options": {
+  "size": [
+   [
+    "48",
+    "48",
+    "QE48S95HHEXXU",
+    true
+   ],
+   [
+    "55",
+    "55",
+    "QE55S95HFTXXU",
+    true
+   ],
+   [
+    "65",
+    "65",
+    "QE65S95HFTXXU",
+    true
+   ],
+   [
+    "77",
+    "77",
+    "QE77S95HFTXXU",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "size": "77"
+  },
+  "sku": "QE77S95HFTXXU",
+  "prices": {
+   "base": "£3,499.00",
+   "monthly": null,
+   "was": "£3,699.00"
+  },
+  "available": true
+ },
+ "sections": [
+  "Choose your size",
+  "Want up to £250.00 off? Recycle your old TV for an instant discount. Learn more",
+  "Add-on Items",
+  "Pre-purchase check",
+  "Offers"
+ ],
+ "spec_count": 113,
+ "spec_sample": [
+  [
+   "Display",
+   "Screen Size",
+   "77\""
+  ],
+  [
+   "Display",
+   "Resolution",
+   "3840 x 2160"
+  ],
+  [
+   "Display",
+   "Refresh Rate",
+   "100 Hz (up to 165 Hz)"
+  ],
+  [
+   "Display",
+   "Anti Reflection",
+   "OLED Glare Free"
+  ],
+  [
+   "Video",
+   "Processor",
+   "NQ4 AI Gen3 Processor"
+  ]
+ ],
+ "offers": [
+  "QE77S95HFTXXU"
+ ]
+}

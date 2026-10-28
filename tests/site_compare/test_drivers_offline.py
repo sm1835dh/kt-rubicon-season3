@@ -1,0 +1,89 @@
+"""Offline driver tests on trimmed DOM fixtures of real pages (saved by `python -m tools.site_compare snapshot`).
+
+Every fixture's driver output must equal the golden values saved with it; a failing case names the template,
+product and context whose parsing changed. Hand-written checks below pin facts from the 2026-10-28 research.
+"""
+import json
+from pathlib import Path
+
+import pytest
+from playwright.sync_api import sync_playwright
+
+from tools.site_compare.capture import VIEWPORT
+from tools.site_compare.config import load_product
+from tools.site_compare.sites import get_driver
+from tools.site_compare.snapshot import FIXTURES, diff_expected, expected_for, load_fixture
+
+PRODUCTS = Path(__file__).resolve().parents[2] / "tools" / "site_compare" / "products"
+TEMPLATES = ("pd", "us_pdp", "watchbc", "hubble", "us")
+CASES = sorted(p for t in TEMPLATES for p in (FIXTURES / t).glob("*.expected.json"))
+
+
+def _case(path: Path):
+    template = path.parent.name
+    stem = path.name.removesuffix(".expected.json")
+    name, ctx_id = stem.split("__")
+    product = load_product(PRODUCTS / f"{name.removesuffix('-specpage')}.yaml")
+    ctx = next(c for c in product.contexts if c.id == ctx_id)
+    return template, product, ctx, path.with_name(f"{stem}.html.gz")
+
+
+@pytest.fixture(scope="module")
+def page():
+    with sync_playwright() as p:
+        b = p.chromium.launch(channel="chrome", headless=True)
+        pg = b.new_context(viewport=VIEWPORT, java_script_enabled=True).new_page()
+        yield pg
+        b.close()
+
+
+def _run(page, path):
+    template, product, ctx, html = _case(path)
+    expected = load_fixture(page, html)
+    return expected, expected_for(page, get_driver(template), product, ctx)
+
+
+@pytest.mark.parametrize("path", CASES, ids=lambda p: f"{p.parent.name}/{p.name.removesuffix('.expected.json')}")
+def test_driver_reproduces_fixture(page, path):
+    expected, got = _run(page, path)
+    assert diff_expected(expected, got) == []
+
+
+def _expected(template, stem):
+    return json.loads((FIXTURES / template / f"{stem}.expected.json").read_text(encoding="utf-8"))
+
+
+def _values(exp, axis):
+    return {o[0] for o in exp["options"][axis]}
+
+
+def test_pd_tv_sizes_by_country():
+    assert _values(_expected("pd", "tv_s95h__uk"), "size") == {"48", "55", "65", "77"}
+    assert _values(_expected("pd", "tv_s95h__ca-fr-qc"), "size") == {"55", "65", "77", "83"}
+
+
+def test_pd_tv_ref_skus_and_prices():
+    uk, qc = _expected("pd", "tv_s95h__uk"), _expected("pd", "tv_s95h__ca-en-qc")
+    assert uk["state"]["sku"] == "QE77S95HFTXXU" and uk["state"]["prices"]["was"].startswith("£")
+    assert qc["state"]["sku"] == "QN77S95HAFXZC" and qc["state"]["prices"]["monthly"] is None  # Quebec: no financing
+    assert _expected("pd", "tv_s95h__ca-en-on")["state"]["prices"]["monthly"]  # Ontario EN shows monthly
+
+
+def test_pd_washer_uk_f_is_discontinued_with_specs():
+    f = _expected("pd", "washer_flagship__uk-f")
+    assert f["state"]["available"] is False and f["state"]["prices"]["base"] is None
+    assert f["spec_count"] >= 30
+
+
+def test_pd_washer_and_fridge_colours():
+    assert _values(_expected("pd", "washer_flagship__uk"), "color") == {"darksteel", "neatwhite"}
+    assert _values(_expected("pd", "fridge_t_style__uk"), "color") == {"silver", "black"}
+    assert _expected("pd", "washer_flagship__ca-fr-on")["state"]["prices"]["base"].endswith("$")  # fr-CA format
+
+
+def test_pd_sections_map_to_rules():
+    from tools.site_compare.config import map_section
+    product = load_product(PRODUCTS / "washer_flagship.yaml")
+    for ctx in ("uk", "ca-en-on", "ca-fr-qc"):
+        ids = [map_section(t, product.sections) for t in _expected("pd", f"washer_flagship__{ctx}")["sections"]]
+        assert "color" in ids and "pre_purchase" in ids, ids
