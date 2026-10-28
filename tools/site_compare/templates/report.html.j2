@@ -54,12 +54,14 @@ table.specs td, table.specs th { font-size: 12px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 0 0 20px; }
 .card h3 { margin: 0 0 6px; }
 .card-warn { background: var(--amber-bg); color: var(--amber); border-radius: 6px; padding: 6px 10px; margin: 8px 0; font-size: 13px; }
-.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; align-items: start; }
+.panels { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; align-items: flex-start; }
+.panels figure { flex: 1 1 300px; min-width: 0; max-width: 640px; }
+.panels figure.wide { flex-basis: 100%; max-width: 100%; }
 figure { margin: 0; }
-figure.wide { grid-column: 1 / -1; }
 .plabel { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
 .imgwrap { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
 .imgwrap img { display: block; width: 100%; height: auto; }
+.imgwrap.cropped img { max-width: none; transform-origin: 0 0; }
 .hl { position: absolute; outline: 3px solid var(--red); outline-offset: 2px; border-radius: 3px; pointer-events: none; }
 figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; word-break: break-all; }
 .noimg { padding: 30px 10px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; }
@@ -183,7 +185,8 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
       <figure{% if p.wide %} class="wide"{% endif %}>
         <div class="plabel">{{ p.label }} <span class="muted">· {{ p.section }}</span>{% if p.status and p.status != "ok" %} <span class="chip {{ p.status }}">{{ p.status }}</span>{% endif %}{% if p.combo_warnings %} <span class="chip warn" title="{{ p.combo_warnings|join('\n') }}">경고 {{ p.combo_warnings|length }}</span>{% endif %}</div>
         {% if p.img %}
-        <div class="imgwrap"><a href="{{ p.img }}" target="_blank"><img src="{{ p.img }}" alt="{{ p.label }} {{ p.section }}" loading="lazy"></a>
+        {% set c = p.crop %}
+        <div class="imgwrap{% if c %} cropped{% endif %}" style="{% if p.view_w %}max-width:{{ p.view_w }}px;{% endif %}{% if c %}aspect-ratio:{{ c.x1 - c.x0 }} / {{ c.y1 - c.y0 }}{% endif %}"{% if c %} title="강조 부분만 확대 · 누르면 원본"{% endif %}><a href="{{ p.img }}" target="_blank"><img src="{{ p.img }}" alt="{{ p.label }} {{ p.section }}" loading="lazy"{% if c %} style="width:{{ c.scale }}%;transform:translate(-{{ c.tx }}%,-{{ c.ty }}%)"{% endif %}></a>
           {% for b in p.boxes %}<div class="hl" style="left:{{ b.left }}%;top:{{ b.top }}%;width:{{ b.width }}%;height:{{ b.height }}%"></div>{% endfor %}
         </div>
         {% else %}<div class="noimg">캡쳐 없음</div>{% endif %}

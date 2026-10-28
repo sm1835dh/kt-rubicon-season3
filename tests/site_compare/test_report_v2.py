@@ -162,3 +162,47 @@ def test_discover_rules_describe_axes_and_ref_skus(tmp_path):
     assert "통신사" not in rules and "용량의" not in rules  # Fold8 (click mode) wording stays out
     assert "size 전체 · color Graphite 고정" in rules and "depth 전체" in rules and "스펙만" in rules
     assert "<td>UK77</td>" in rules and "<td>US77</td>" in rules
+
+
+def test_tall_panel_is_cropped_around_highlights(tmp_path):
+    tall = Shot("Specs (2/2)", None, 2, "shots/uk__77__spec-2.png", 1440, 2600,
+                [TextBox("1782.6 x 1089.6 x 319.9 inch", 600, 2000, 200, 20), TextBox("Round Feet", 700, 1900, 80, 20)])
+    small = Shot("Choose your size", "size", 1, "shots/uk__77__01.png", 448, 334, [TextBox("77", 100, 100, 30, 20)])
+    r = _res(UK, "77", "£1.00", ref=True, spec_shots=[Shot("Specs (1/2)", None, 1, "shots/uk__77__spec-1.png", 1440,
+                                                          2600, []), tall])
+    r.sections = [small]
+    run = RunData.from_json(_run_dir(tmp_path, [r]) / "data.json")
+    p = resolve_panel(Panel("uk__77", "spec-2", ["1782.6 x 1089.6 x 319.9 inch", "Round Feet"], None), run, PRODUCT)
+    c = p["crop"]
+    assert c and c["x0"] <= 600 and c["x1"] >= 800 and c["y0"] <= 1900 and c["y1"] >= 2020
+    assert c["x1"] - c["x0"] < 1440 and c["y1"] - c["y0"] < 1000  # a readable window, not the whole slice
+    assert p["view_w"] == c["x1"] - c["x0"]  # shown at most at its pixel width (no upscaling)
+    b = p["boxes"][0]  # boxes are relative to the crop window
+    assert b["left"] == round((600 - c["x0"]) / (c["x1"] - c["x0"]) * 100, 3)
+    assert b["top"] == round((2000 - c["y0"]) / (c["y1"] - c["y0"]) * 100, 3)
+    assert resolve_panel(Panel("uk__77", "size", ["77"], None), run, PRODUCT)["crop"] is None
+
+
+def test_wide_window_spans_the_card_row(tmp_path):
+    trade = Shot("Trade-in", "trade", 1, "shots/uk__77__02.png", 1264, 263,
+                 [TextBox("Get an instant discount for trading in your current device.", 40, 60, 900, 24)])
+    narrow = Shot("Choose your size", "size", 1, "shots/uk__77__01.png", 448, 334, [TextBox("77", 100, 100, 30, 20)])
+    r = _res(UK, "77", "£1.00", ref=True)
+    r.sections = [narrow, trade]
+    run = RunData.from_json(_run_dir(tmp_path, [r]) / "data.json")
+    rules = SECTIONS + [SectionRule("trade", "트레이드인", ["trade-in"])]
+    product = Product("demo", "Demo", [UK, UKF, US], sections=rules, mode="discover", key_specs=KEY)
+    assert resolve_panel(Panel("uk__77", "trade", ["instant discount"], None), run, product)["wide"] is True
+    assert resolve_panel(Panel("uk__77", "size", ["77"], None), run, product)["wide"] is False
+
+
+def test_tiny_highlight_gets_a_visible_box(tmp_path):
+    summary = Shot("Summary", "size", 1, "shots/uk__77__01.png", 1440, 619, [TextBox("Charger included", 987, 815 - 400, 1, 1)])
+    r = _res(UK, "77", "£1.00", ref=True)
+    r.sections = [summary]
+    run = RunData.from_json(_run_dir(tmp_path, [r]) / "data.json")
+    p = resolve_panel(Panel("uk__77", "size", ["Charger included"], None), run, PRODUCT)
+    c = p["crop"]
+    cw, ch = (c["x1"] - c["x0"], c["y1"] - c["y0"]) if c else (1440, 619)
+    b = p["boxes"][0]
+    assert b["width"] * cw / 100 >= 28 and b["height"] * ch / 100 >= 28  # alt text of an icon is a 1×1 element

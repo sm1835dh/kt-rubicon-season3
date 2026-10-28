@@ -50,4 +50,4 @@ key_specs:
   - {id: weight,          label_ko: 무게,            patterns: ["body weight", "^weight", "^poids"]}
   - {id: dimensions,      label_ko: 치수,            patterns: ["body dimension", "^dimensions?", "^dimension"]}
   - {id: durability,      label_ko: 내구성(방수),    patterns: ["durability", "water resistance", "résistance", "durabilité"]}
-  - {id: processor,       label_ko: 프로세서,        patterns: ["cpu speed", "processor", "processeur", "vitesse du processeur"]}
+  - {id: processor,       label_ko: 프로세서,        patterns: ["cpu speed", "processor", "processeur", "vitesse du processeur", "vitesse de l.unité centrale"]}

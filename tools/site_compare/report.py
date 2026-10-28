@@ -10,7 +10,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .config import context_axes, map_section
-from .model import ComboResult, Product, RunData, Shot
+from .model import ComboResult, Product, RunData, Shot, TextBox
 
 TAGS = ("국가별 구성 차이", "사이트 데이터 오류", "소스 vs 화면 불일치", "CA-FR 번역")
 NOT_MENU = {"price_bar", "summary"}  # pseudo sections: captured, but not buy-flow steps
@@ -84,7 +84,7 @@ def resolve_panel(panel: Panel, run: RunData, product: Product) -> dict:
     sec_labels = {s.id: s.label_ko for s in product.sections}
     out = {"img": None, "width": None, "height": None, "boxes": [], "warnings": [], "anchor": panel.combo,
            "label": panel.combo, "section": sec_labels.get(panel.section, panel.section), "url": None, "got": "",
-           "caption": panel.caption, "status": None, "wide": False, "combo_warnings": []}
+           "caption": panel.caption, "status": None, "wide": False, "combo_warnings": [], "crop": None, "view_w": None}
     r = next((x for x in run.results if x.combo_id == panel.combo), None)
     if r is None:
         out["warnings"].append(f"combo not found: {panel.combo}")
@@ -101,17 +101,59 @@ def resolve_panel(panel: Panel, run: RunData, product: Product) -> dict:
         if panel.highlight:
             out["warnings"].append("highlight not supported on full screenshot")
         return out
-    out.update(width=shot.width, height=shot.height, wide=shot.height > 0 and shot.width / shot.height > 5)
+    strip = shot.height > 0 and shot.width / shot.height > 5  # e.g. the sticky price bar: keep it whole
+    out.update(width=shot.width, height=shot.height, wide=strip)
+    found = []
     for h in panel.highlight:
         want = _ws(h)
         hits = [t for t in shot.texts if _ws(t.text) == want] or [t for t in shot.texts if want in _ws(t.text)]
         if not hits:
             out["warnings"].append(f"highlight not found: {h}")
             continue
-        t = min(hits, key=lambda t: t.w * t.h)
-        out["boxes"].append({"left": round(t.x / shot.width * 100, 3), "top": round(t.y / shot.height * 100, 3),
-                             "width": round(t.w / shot.width * 100, 3), "height": round(t.h / shot.height * 100, 3)})
+        found.append(_visible(min(hits, key=lambda t: t.w * t.h), shot.width, shot.height))
+    c = out["crop"] = None if strip else _crop_window(found, shot.width, shot.height)
+    x0, y0, cw, ch = (c["x0"], c["y0"], c["x1"] - c["x0"], c["y1"] - c["y0"]) if c else (0, 0, shot.width, shot.height)
+    out["wide"] = strip or cw > WIDE_PX  # a wide window squeezed into one grid column is unreadable
+    out["view_w"] = cw
+    for t in found:
+        out["boxes"].append({"left": round((t.x - x0) / cw * 100, 3), "top": round((t.y - y0) / ch * 100, 3),
+                             "width": round(t.w / cw * 100, 3), "height": round(t.h / ch * 100, 3)})
     return out
+
+
+CROP_PAD, CROP_MIN_W, CROP_MIN_H = 160, 560, 280
+HL_MIN = 28
+
+
+def _visible(t: TextBox, width: int, height: int) -> TextBox:
+    """Grow a tiny text box (e.g. an icon's alt text) so its highlight can be seen, centred on the original."""
+    if t.w >= 6 and t.h >= 6:
+        return t
+    w, h = max(t.w, HL_MIN), max(t.h, HL_MIN)
+    x = min(max(0, t.x - (w - t.w) / 2), max(0, width - w))
+    y = min(max(0, t.y - (h - t.h) / 2), max(0, height - h))
+    return TextBox(t.text, x, y, w, h)
+WIDE_PX = 720
+
+
+def _crop_window(boxes: list, width: int, height: int) -> dict | None:
+    """A window around the highlighted texts, so a tall or full-width shot stays readable in a card column."""
+    if not boxes or not width or not height:
+        return None
+
+    def span(lo, hi, size, minimum):
+        lo, hi = max(0, lo - CROP_PAD), min(size, hi + CROP_PAD)
+        if hi - lo < minimum:  # widen around the centre, kept inside the image
+            mid = (lo + hi) / 2
+            lo, hi = max(0, min(mid - minimum / 2, size - minimum)), min(size, max(mid + minimum / 2, minimum))
+        return round(lo), round(hi)
+
+    x0, x1 = span(min(b.x for b in boxes), max(b.x + b.w for b in boxes), width, CROP_MIN_W)
+    y0, y1 = span(min(b.y for b in boxes), max(b.y + b.h for b in boxes), height, CROP_MIN_H)
+    if (x1 - x0) * (y1 - y0) >= 0.6 * width * height:
+        return None  # the shot is already about the size of the window
+    return {"x0": x0, "y0": y0, "x1": x1, "y1": y1, "tx": round(x0 / width * 100, 3), "ty": round(y0 / height * 100, 3),
+            "scale": round(width / (x1 - x0) * 100, 3)}
 
 
 def _columns(run: RunData, product: Product) -> list[dict]:
