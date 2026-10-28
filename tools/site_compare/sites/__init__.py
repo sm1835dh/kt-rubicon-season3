@@ -1,4 +1,4 @@
-from .base import Box, OptionNotFound, OptionUnavailable, SiteDriver
+from .base import BaseDriver, Box, OptionNotFound, OptionUnavailable, SiteDriver
 
 
 def get_driver(name: str) -> SiteDriver:
@@ -11,4 +11,4 @@ def get_driver(name: str) -> SiteDriver:
     raise ValueError(f"unknown driver {name!r}")
 
 
-__all__ = ["Box", "OptionNotFound", "OptionUnavailable", "SiteDriver", "get_driver"]
+__all__ = ["BaseDriver", "Box", "OptionNotFound", "OptionUnavailable", "SiteDriver", "get_driver"]

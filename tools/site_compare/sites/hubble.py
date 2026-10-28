@@ -6,7 +6,7 @@ from typing import Iterator
 
 from ..model import Context, PriceTexts, Product, State
 from ..prices import money_tokens
-from .base import Box, OptionNotFound, OptionUnavailable
+from .base import BaseDriver, Box, OptionNotFound, OptionUnavailable
 
 WAIT_MS = 5000  # spec: wait 5s after (re)load
 REGION_NAMES = {"CA-ON": ["Ontario"], "CA-QC": ["Québec", "Quebec"]}
@@ -62,7 +62,7 @@ def _norm(s: str | None) -> str:
     return re.sub(r"\s+", "", (s or "")).lower()
 
 
-class HubbleDriver:
+class HubbleDriver(BaseDriver):
     def prepare(self, page, ctx: Context) -> list[str]:
         warnings: list[str] = []
         _click_if_visible(page, "#truste-consent-required")

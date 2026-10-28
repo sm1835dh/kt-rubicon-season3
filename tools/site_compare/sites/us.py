@@ -6,7 +6,7 @@ from typing import Iterator
 
 from ..model import Context, PriceTexts, Product, State
 from ..prices import money_tokens
-from .base import Box, OptionNotFound, OptionUnavailable
+from .base import BaseDriver, Box, OptionNotFound, OptionUnavailable
 
 CARRIER_SUFFIX = {"unlocked": "XAA", "verizon": "VZW", "at&t": "ATT"}
 STORAGE_CODE = {"256gb": "A", "512gb": "E", "1tb": "F"}
@@ -75,7 +75,7 @@ def _rect(page, js_expr: str) -> Box | None:
     return tuple(b) if b else None
 
 
-class UsDriver:
+class UsDriver(BaseDriver):
     # Carrier tiles change after re-clicks and overlays, so every combo starts from a fresh load.
     fresh_page_per_combo = True
 

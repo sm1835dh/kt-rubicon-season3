@@ -8,8 +8,9 @@ from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
 
-from .config import expand_combos, map_section, slug
-from .model import Combo, ComboResult, Context, Product, RunData, Shot, TextBox
+from .config import combo_id, combo_key, context_axes, expand_combos, map_section, slug
+from .model import Combo, ComboResult, Context, Option, Product, RunData, Shot, SpecItem, State, TextBox
+from .pngsize import png_size
 from .prices import extract_offers, money_tokens, parse_money, price_matches
 from .sites import Box, OptionUnavailable, SiteDriver, get_driver
 
@@ -17,6 +18,10 @@ KST = timezone(timedelta(hours=9))
 VIEWPORT = {"width": 1440, "height": 1000}
 AXES = ("storage", "color", "carrier")
 REGIONS = {"CA-ON": {"ontario"}, "CA-QC": {"quebec", "québec"}}
+# TrustArc consent stored up front: the consent click reloads UK/CA pages and breaks the capture.
+CONSENT_COOKIES = {"notice_preferences": "0:", "notice_gdpr_prefs": "0::implied,eu",
+                   "notice_behavior": "implied,eu", "cmapi_cookie_privacy": "permit 1 required"}
+SLICE_PX = 8000  # Chrome renders one full-page capture wrongly past ~16k px
 
 _TEXT_BOXES_JS = r"""
 ([x, y, w, h]) => {
@@ -47,6 +52,11 @@ def _norm(v: str | None) -> str:
     return re.sub(r"\s+", "", (v or "").split("｜")[0]).lower()
 
 
+def norm_value(v: str | None) -> str:
+    """Option comparison key: lowercase without spaces, quotes or inch marks."""
+    return re.sub(r"[\s\"'″”“’]+", "", (v or "").split("｜")[0]).lower()
+
+
 def norm_region(v: str | None) -> str:
     if not v:
         return ""
@@ -59,8 +69,21 @@ def norm_region(v: str | None) -> str:
     return t
 
 
+def preset_cookies(browser_context, ctx: Context) -> None:
+    values = dict(CONSENT_COOKIES)
+    if ctx.region:
+        values["country_region"] = ctx.region
+    values.update(ctx.cookies or {})
+    browser_context.add_cookies([{"name": k, "value": v, "domain": ".samsung.com", "path": "/"}
+                                 for k, v in values.items()])
+
+
 def collect_text_boxes(page, box: Box) -> list[TextBox]:
     return [TextBox(*row) for row in page.evaluate(_TEXT_BOXES_JS, list(box))]
+
+
+def page_size(page) -> tuple[float, float]:
+    return tuple(page.evaluate("[document.documentElement.scrollWidth, document.documentElement.scrollHeight]"))
 
 
 def scroll_through(page, step: int = 800, pause_ms: int = 250, limit: int = 20000) -> None:
@@ -72,11 +95,31 @@ def scroll_through(page, step: int = 800, pause_ms: int = 250, limit: int = 2000
     page.wait_for_timeout(pause_ms)
 
 
-def _shot(page, run_dir: Path, name: str, title: str, section_id: str | None, order: int, box: Box) -> Shot:
-    x, y, w, h = (max(0.0, box[0]), max(0.0, box[1]), box[2], box[3])
+def _shot(page, run_dir: Path, name: str, title: str, section_id: str | None, order: int, box: Box,
+          warnings: list[str]) -> Shot | None:
+    """Clip screenshot clamped to the page; Shot carries the real PNG size."""
+    pw, ph = page_size(page)
+    x, y = max(0.0, box[0]), max(0.0, box[1])
+    w, h = min(box[2], pw - x), min(box[3], ph - y)
+    if w < 1 or h < 1:
+        warnings.append(f"shot {name}: box outside the page {tuple(round(v) for v in box)}")
+        return None
     rel = f"shots/{name}.png"
     page.screenshot(path=str(run_dir / rel), clip={"x": x, "y": y, "width": w, "height": h}, full_page=True)
-    return Shot(title, section_id, order, rel, round(w), round(h), collect_text_boxes(page, (x, y, w, h)))
+    rw, rh = png_size(run_dir / rel)
+    return Shot(title, section_id, order, rel, rw, rh, collect_text_boxes(page, (x, y, w, h)))
+
+
+def full_shots(page, run_dir: Path, name: str, slice_px: int = SLICE_PX) -> list[str]:
+    scroll_through(page, limit=80000)
+    pw, ph = page_size(page)
+    out = []
+    for n, y in enumerate(range(0, int(ph), slice_px), 1):
+        rel = f"shots/{name}__full-{n:02d}.png"
+        page.screenshot(path=str(run_dir / rel), clip={"x": 0, "y": y, "width": pw, "height": min(slice_px, ph - y)},
+                        full_page=True)
+        out.append(rel)
+    return out
 
 
 def _has_price(text: str | None, locale: str) -> bool:
@@ -89,13 +132,75 @@ def _site_prefix(url: str) -> str:
     return f"{u.scheme}://{u.netloc}/{first}/"
 
 
-def capture_combo(page, driver: SiteDriver, product: Product, ctx: Context, combo: Combo, run_dir: Path,
-                  wait_ms: int, with_extras: bool) -> ComboResult:
-    warnings: list[str] = []
-    status = "ok"
-    got = base = offer = match = full = url_final = None
+def _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings) -> State:
+    got = driver.read_state(page, ctx, product)
+    if not _has_price(got.prices.base, ctx.locale) and got.available is not False:
+        page.wait_for_timeout(wait_ms)
+        got = driver.read_state(page, ctx, product)
+        if not _has_price(got.prices.base, ctx.locale) and got.available is not False:
+            warnings.append("price not rendered")
+    return got
+
+
+def _capture_page(page, driver, product, name: str, run_dir: Path, with_extras: bool, warnings: list[str]):
+    """Sections, layers and specs of the current page state."""
     sections: list[Shot] = []
     extras: list[Shot] = []
+    spec_shots: list[Shot] = []
+    scroll_through(page, limit=80000)
+    for order, (title, box) in enumerate(driver.section_boxes(page), 1):
+        s = _shot(page, run_dir, f"{name}__{order:02d}-{slug(title)[:40]}", title, map_section(title, product.sections),
+                  order, box, warnings)
+        if s:
+            sections.append(s)
+    if not sections:
+        warnings.append("no sections found")
+    if with_extras:
+        try:
+            for n, (title, box) in enumerate(driver.extra_shots(page), 1):
+                s = _shot(page, run_dir, f"{name}__extra-{n}", title, None, n, box, warnings)
+                if s:
+                    extras.append(s)
+        finally:
+            driver.close_extras(page)
+    specs, boxes = _specs(page, driver, warnings)
+    for n, (title, box) in enumerate(boxes, 1):
+        s = _shot(page, run_dir, f"{name}__spec-{n}", title, None, n, box, warnings)
+        if s:
+            spec_shots.append(s)
+    return sections, extras, specs, spec_shots
+
+
+def _specs(page, driver, warnings) -> tuple[list[SpecItem], list[tuple[str, Box]]]:
+    try:
+        return driver.specs(page)
+    except Exception as e:
+        warnings.append(f"specs failed: {type(e).__name__}: {e}")
+        return [], []
+
+
+def _finish_shots(page, ctx: Context, run_dir: Path, name: str, warnings: list[str]) -> tuple[str | None, list[str]]:
+    url_final, shots = None, []
+    try:
+        url_final = page.url
+        if not url_final.startswith(_site_prefix(ctx.url)):
+            warnings.append(f"redirected: {url_final}")
+        shots = full_shots(page, run_dir, name)
+    except Exception as e:
+        warnings.append(f"full screenshot failed: {e}")
+    return url_final, shots
+
+
+def capture_combo(page, driver: SiteDriver, product: Product, ctx: Context, combo: Combo, run_dir: Path,
+                  wait_ms: int, with_extras: bool) -> ComboResult:
+    """Click mode (Fold8): select want axes on the current page, then capture."""
+    warnings: list[str] = []
+    status = "ok"
+    got = base = offer = match = None
+    sections: list[Shot] = []
+    extras: list[Shot] = []
+    specs: list[SpecItem] = []
+    spec_shots: list[Shot] = []
     try:
         # Try every axis; a step the site refuses is evidence, but the final state decides the status.
         refused: list[str] = []
@@ -107,13 +212,7 @@ def capture_combo(page, driver: SiteDriver, product: Product, ctx: Context, comb
                     refused.append(f"unavailable: {e}")
                 page.wait_for_timeout(wait_ms)
 
-        got = driver.read_state(page, ctx, product)
-        if not _has_price(got.prices.base, ctx.locale):
-            page.wait_for_timeout(wait_ms)
-            got = driver.read_state(page, ctx, product)
-            if not _has_price(got.prices.base, ctx.locale):
-                warnings.append("price not rendered")
-
+        got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings)
         off = [f"selection mismatch: {axis} want={combo.want[axis]} got={got.selection.get(axis)}"
                for axis in AXES if axis in combo.want and _norm(combo.want[axis]) != _norm(got.selection.get(axis))]
         if off:
@@ -126,42 +225,165 @@ def capture_combo(page, driver: SiteDriver, product: Product, ctx: Context, comb
             if status == "ok":
                 status = "mismatch"  # prices shown belong to another province
 
-        scroll_through(page)
-        for order, (title, box) in enumerate(driver.section_boxes(page), 1):
-            sid = map_section(title, product.sections)
-            sections.append(_shot(page, run_dir, f"{combo.id}__{order:02d}-{slug(title)[:40]}", title, sid, order, box))
-        if not sections:
-            warnings.append("no sections found")
-        if with_extras:
-            try:
-                for n, (title, box) in enumerate(driver.extra_shots(page), 1):
-                    extras.append(_shot(page, run_dir, f"{combo.id}__extra-{n}", title, None, n, box))
-            finally:
-                driver.close_extras(page)
-
+        sections, extras, specs, spec_shots = _capture_page(page, driver, product, combo.id, run_dir, with_extras,
+                                                            warnings)
         base = parse_money(got.prices.base, ctx.locale, ctx.currency)
         offer = extract_offers(page.content()).get((got.sku or "").upper())
         match = price_matches(base, offer)
     except Exception as e:  # keep the run going; the report shows the error
         status = "error"
         warnings.append(f"error: {type(e).__name__}: {e}")
-    try:
-        url_final = page.url
-        if not url_final.startswith(_site_prefix(ctx.url)):
-            warnings.append(f"redirected: {url_final}")
-        full = f"shots/{combo.id}__full.png"
-        page.screenshot(path=str(run_dir / full), full_page=True)
-    except Exception as e:
-        full = None
-        warnings.append(f"full screenshot failed: {e}")
+    url_final, shots = _finish_shots(page, ctx, run_dir, combo.id, warnings)
     return ComboResult(combo.id, ctx.id, combo.kind, combo.want, got, url_final, status, base, offer, match,
-                       sections, extras, [full] if full else [], warnings, now_kst().isoformat(timespec="seconds"),
-                       key=combo.key)
+                       sections, extras, shots, warnings, now_kst().isoformat(timespec="seconds"),
+                       specs=specs, spec_shots=spec_shots, key=combo.key)
+
+
+def _open(browser_context, driver, ctx: Context, url: str, wait_ms: int):
+    page = browser_context.new_page()
+    page.goto(url, wait_until="domcontentloaded", timeout=90000)
+    page.wait_for_timeout(wait_ms)
+    return page, [f"prepare: {w}" for w in driver.prepare(page, ctx)]
+
+
+def _matches(option: Option, value: str) -> bool:
+    return norm_value(value) in (option.value, norm_value(option.label))
+
+
+def discover_leaves(browser_context, driver, product: Product, ctx: Context, wait_ms: int) -> tuple[list[Combo], list[str]]:
+    """Walk the option tree of the context's axes; one Combo per leaf."""
+    axes = [a for a in context_axes(product, ctx) if a.iterate or a.fixed]
+    warnings: list[str] = []
+    if not axes:
+        return [Combo(f"{ctx.id}__ref", ctx.id, "main", {}, [], ctx.ref_sku, combo_key([]), True)], warnings
+    start = driver.sku_url(ctx, ctx.ref_sku) or ctx.url
+    leaves: list[Combo] = []
+    ref_selection: dict[str, str] = {}
+
+    def walk(prefix: list[Option]):
+        page, _ = _open(browser_context, driver, ctx, start, wait_ms)
+        try:
+            for o in prefix:
+                driver.choose(page, ctx, o)
+                page.wait_for_timeout(wait_ms)
+            if not prefix:
+                ref_selection.update(driver.read_state(page, ctx, product).selection)
+            spec = axes[len(prefix)]
+            opts = driver.options(page, ctx, spec.name)
+        finally:
+            page.close()
+        if spec.fixed:
+            opts = [o for o in opts if _matches(o, spec.fixed)][:1]
+            if not opts:
+                warnings.append(f"discover: no {spec.name} option {spec.fixed!r} under {[o.label for o in prefix]}")
+        if not opts and not spec.fixed:
+            warnings.append(f"discover: no {spec.name} options under {[o.label for o in prefix]}")
+        for o in opts:
+            if len(prefix) + 1 == len(axes):
+                path = prefix + [o]
+                leaves.append(Combo(combo_id(ctx.id, path), ctx.id, "main", {p.axis: p.label for p in path}, path,
+                                    o.sku, combo_key(path)))
+            else:
+                walk(prefix + [o])
+
+    walk([])
+    ref = [l for l in leaves if l.target_sku and ctx.ref_sku and norm_value(l.target_sku) == norm_value(ctx.ref_sku)]
+    if not ref:  # SKUs unknown: the leaf whose values equal the reference page's selection
+        ref = [l for l in leaves if all(_matches(o, ref_selection.get(o.axis, "")) for o in l.path)]
+    for l in ref[:1]:
+        l.is_ref = True
+    return leaves, warnings
+
+
+def capture_leaf(browser_context, driver, product: Product, ctx: Context, combo: Combo, run_dir: Path, wait_ms: int,
+                 with_extras: bool) -> ComboResult:
+    """Discover mode: open the leaf's state on a fresh page (direct URL or click path), verify, capture."""
+    warnings: list[str] = []
+    status = "ok"
+    got = base = offer = match = None
+    sections: list[Shot] = []
+    extras: list[Shot] = []
+    specs: list[SpecItem] = []
+    spec_shots: list[Shot] = []
+    url = driver.sku_url(ctx, combo.target_sku) if combo.target_sku else None
+    page = None
+    url_final, shots = None, []
+    try:
+        page, prep = _open(browser_context, driver, ctx, url or ctx.url, wait_ms)
+        warnings += prep
+        refused: list[str] = []
+        if not url:
+            for o in combo.path:
+                try:
+                    driver.choose(page, ctx, o)
+                except OptionUnavailable as e:
+                    refused.append(f"unavailable: {e}")
+                page.wait_for_timeout(wait_ms)
+        got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings)
+        off = []
+        if combo.target_sku and got.sku and norm_value(got.sku) != norm_value(combo.target_sku):
+            off.append(f"sku mismatch: want={combo.target_sku} got={got.sku}")
+        off += [f"selection mismatch: {o.axis} want={o.label} got={got.selection.get(o.axis)}"
+                for o in combo.path if o.axis in got.selection and not _matches(o, got.selection[o.axis])]
+        if got.available is False:
+            status = "unavailable"
+            warnings.append("not available: the page says this product cannot be bought")
+            warnings += off
+        elif off:
+            status = "unavailable" if refused else "mismatch"
+            warnings += refused + off
+        elif refused:
+            warnings += [f"{w} (but the final state matches)" for w in refused]
+        if ctx.region and norm_region(got.region) != ctx.region:
+            warnings.append(f"region mismatch: want={ctx.region} got={got.region}")
+            if status == "ok":
+                status = "mismatch"
+        sections, extras, specs, spec_shots = _capture_page(page, driver, product, combo.id, run_dir, with_extras,
+                                                            warnings)
+        base = parse_money(got.prices.base, ctx.locale, ctx.currency)
+        offer = extract_offers(page.content()).get((got.sku or "").upper())
+        match = price_matches(base, offer)
+        if status == "ok" and base is None and not sections and not specs:
+            status = "error"
+            warnings.append("nothing captured")
+    except Exception as e:
+        status = "error"
+        warnings.append(f"error: {type(e).__name__}: {e}")
+    if page is not None:
+        url_final, shots = _finish_shots(page, ctx, run_dir, combo.id, warnings)
+        page.close()
+    return ComboResult(combo.id, ctx.id, combo.kind, combo.want, got, url_final, status, base, offer, match,
+                       sections, extras, shots, warnings, now_kst().isoformat(timespec="seconds"),
+                       specs=specs, spec_shots=spec_shots, key=combo.key, is_ref=combo.is_ref)
+
+
+def capture_specs_page(browser_context, ctx: Context, result: ComboResult, run_dir: Path, wait_ms: int) -> None:
+    """Specs that live on another page (buy page → PDP): fill the reference result."""
+    driver = get_driver(ctx.spec_driver or "pd")
+    try:
+        page, prep = _open(browser_context, driver, ctx, ctx.spec_url, wait_ms)
+    except Exception as e:
+        result.warnings.append(f"spec page failed: {type(e).__name__}: {e}")
+        return
+    try:
+        scroll_through(page, limit=80000)
+        specs, boxes = _specs(page, driver, result.warnings)
+        result.specs = specs
+        for n, (title, box) in enumerate(boxes, 1):
+            s = _shot(page, run_dir, f"{result.combo_id}__spec-{n}", title, None, n, box, result.warnings)
+            if s:
+                result.spec_shots.append(s)
+        if not specs:
+            result.warnings.append(f"no specs on {ctx.spec_url}")
+    finally:
+        page.close()
 
 
 def capture_context(browser, driver: SiteDriver, product: Product, ctx: Context, combos: list[Combo],
                     run_dir: Path, wait_ms: int) -> list[ComboResult]:
-    page = browser.new_context(viewport=VIEWPORT).new_page()
+    bctx = browser.new_context(viewport=VIEWPORT)
+    preset_cookies(bctx, ctx)
+    page = bctx.new_page()
 
     def open_page() -> list[str]:
         page.goto(ctx.url, wait_until="domcontentloaded", timeout=90000)
@@ -171,11 +393,12 @@ def capture_context(browser, driver: SiteDriver, product: Product, ctx: Context,
     def failed(c: Combo, e: Exception) -> ComboResult:
         msg = f"error: page load/prepare failed: {type(e).__name__}: {e}"
         return ComboResult(c.id, ctx.id, c.kind, c.want, None, None, "error", None, None, None, [], [], [],
-                           [msg], now_kst().isoformat(timespec="seconds"))
+                           [msg], now_kst().isoformat(timespec="seconds"), key=c.key)
 
     try:
         prep = open_page()
     except Exception as e:
+        bctx.close()
         return [failed(c, e) for c in combos]
     # Drivers whose page state drifts between selections (US) start every combo from a fresh load.
     fresh = getattr(driver, "fresh_page_per_combo", False)
@@ -191,17 +414,47 @@ def capture_context(browser, driver: SiteDriver, product: Product, ctx: Context,
         r = capture_combo(page, driver, product, ctx, combo, run_dir, wait_ms, with_extras=combo.id == first_main)
         r.warnings[:0] = prep
         results.append(r)
-        print(f"  {combo.id}: {r.status} base={r.got.prices.base if r.got else None} "
-              f"warnings={len(r.warnings)}", flush=True)
-    page.context.close()
+        _log(r)
+    bctx.close()
     return results
+
+
+def _log(r: ComboResult) -> None:
+    print(f"  {r.combo_id}: {r.status} sku={r.got.sku if r.got else None} base={r.got.prices.base if r.got else None} "
+          f"specs={len(r.specs)} warnings={len(r.warnings)}", flush=True)
+
+
+def capture_discover_context(browser, driver, product: Product, ctx: Context, run_dir: Path,
+                             wait_ms: int) -> tuple[list[ComboResult], int]:
+    bctx = browser.new_context(viewport=VIEWPORT)
+    preset_cookies(bctx, ctx)
+    results: list[ComboResult] = []
+    try:
+        leaves, dwarn = discover_leaves(bctx, driver, product, ctx, wait_ms)
+    except Exception as e:
+        leaves, dwarn = [], [f"discover failed: {type(e).__name__}: {e}"]
+    print(f"  discovered {len(leaves)} combos", flush=True)
+    if not leaves:  # nothing to capture: keep one error row so the report shows the context
+        results.append(ComboResult(f"{ctx.id}__ref", ctx.id, "main", {}, None, None, "error", None, None, None, [], [],
+                                   [], dwarn or ["discover: no combos"], now_kst().isoformat(timespec="seconds"),
+                                   key=combo_key([]), is_ref=True))
+    for i, leaf in enumerate(leaves):
+        r = capture_leaf(bctx, driver, product, ctx, leaf, run_dir, wait_ms, with_extras=leaf.is_ref)
+        if i == 0:
+            r.warnings[:0] = dwarn
+        if leaf.is_ref and ctx.spec_url:
+            capture_specs_page(bctx, ctx, r, run_dir, wait_ms)
+        results.append(r)
+        _log(r)
+    bctx.close()
+    return results, len(leaves)
 
 
 def run_capture(product: Product, out_root: Path, only: set[str] | None, headed: bool, wait_ms: int) -> Path:
     started = now_kst()
     run_dir = Path(out_root) / product.id / started.strftime("%Y%m%d-%H%M%S")
     (run_dir / "shots").mkdir(parents=True, exist_ok=True)
-    combos = expand_combos(product)
+    combos = expand_combos(product) if product.mode == "click" else []
     run = RunData(product.id, product.title, run_dir.name, started.isoformat(timespec="seconds"),
                   [VIEWPORT["width"], VIEWPORT["height"]], wait_ms, product.contexts, [])
     with sync_playwright() as p:
@@ -210,8 +463,14 @@ def run_capture(product: Product, out_root: Path, only: set[str] | None, headed:
             if only and ctx.id not in only:
                 continue
             print(f"[{ctx.id}] {ctx.url}", flush=True)
-            mine = [c for c in combos if c.context_id == ctx.id]
-            run.results += capture_context(browser, get_driver(ctx.driver), product, ctx, mine, run_dir, wait_ms)
+            driver = get_driver(ctx.driver)
+            if product.mode == "click":
+                mine = [c for c in combos if c.context_id == ctx.id]
+                run.results += capture_context(browser, driver, product, ctx, mine, run_dir, wait_ms)
+            else:
+                results, n = capture_discover_context(browser, driver, product, ctx, run_dir, wait_ms)
+                run.results += results
+                run.discovered[ctx.id] = n
             run.to_json(run_dir / "data.json")
         browser.close()
     run.to_json(run_dir / "data.json")

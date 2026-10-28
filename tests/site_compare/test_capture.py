@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 from tools.site_compare import capture
 from tools.site_compare.capture import capture_combo, run_capture
 from tools.site_compare.model import Combo, Context, Money, PriceTexts, Product, RunData, SectionRule, State
-from tools.site_compare.sites.base import OptionNotFound, OptionUnavailable
+from tools.site_compare.sites.base import BaseDriver, OptionNotFound, OptionUnavailable
 
 FIXTURE = (Path(__file__).parent / "fixtures" / "fake_buy.html").resolve().as_uri()
 WAIT = 300
@@ -17,7 +17,7 @@ RULES = [
 ]
 
 
-class FakeDriver:
+class FakeDriver(BaseDriver):
     """Drives tests/site_compare/fixtures/fake_buy.html."""
 
     def prepare(self, page, ctx):
