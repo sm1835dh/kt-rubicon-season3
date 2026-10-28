@@ -1,0 +1,123 @@
+# OLED S95H 차이점 카드. combo/section은 data.json 기준, highlight는 화면 텍스트(포함 여부로 찾음).
+# 동일 모델 아님: UK QE77S95HFTXXU와 CA·US QN77S95HAF…는 스탠드·두께·무게·소비전력이 다른 하드웨어 변형입니다.
+cards:
+  - id: ca-en-dimension-unit
+    title: CA-EN 스펙의 치수 단위가 inch로 잘못 표기됨
+    tags: [사이트 데이터 오류]
+    panels:
+      - {combo: ca-en-on__77, section: spec-2, highlight: ["1782.6 x 1089.6 x 319.9 inch", "1782.6 x 1049.6 x 26.6 inch"], caption: CA-EN}
+      - {combo: ca-fr-on__77, section: spec-2, highlight: ["1 782,6 x 1 089,6 x 319,9 mm", "1 782,6 x 1 049,6 x 26,6 mm"], caption: CA-FR}
+      - {combo: us__77, section: spec-2, highlight: ["70.18 x 42.90 x 12.59 in", "70.18 x 41.32 x 1.05 in"], caption: US}
+    observation: |
+      [사실] CA-EN 스펙의 "Set Size with Stand"는 "1782.6 x 1089.6 x 319.9 inch"입니다. 같은 SKU(QN77S95HAFXZC)의 CA-FR 스펙은 같은 숫자를 "1 782,6 x 1 089,6 x 319,9 mm"로 표기합니다.
+      [사실] US는 "70.18 x 42.90 x 12.59 in"입니다. 1782.6 mm ÷ 25.4 = 70.18 in이므로 숫자는 mm가 맞고, CA-EN의 단위 표기만 틀렸습니다. 스탠드 크기("1267.2 x 320.0 inch")도 같은 오류입니다.
+    note: |
+      스펙 단위는 라벨을 그대로 믿지 않습니다. 치수는 값 범위로 검증합니다(TV 폭이 1,000 inch 이상이면 mm로 판단). 같은 SKU의 CA-FR·US 값과 교차 확인합니다.
+      CA-EN 스펙을 그대로 답변에 쓰면 "높이 1,089 inch" 같은 오답이 나옵니다.
+
+  - id: uk-hardware-variant
+    title: UK S95H는 CA·US와 다른 하드웨어 변형 (동일 모델 아님)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__77, section: spec-2, highlight: ["Slim Oc Stand"], caption: "UK QE77S95HFTXXU 스탠드"}
+      - {combo: ca-en-on__77, section: spec-2, highlight: ["Round Feet"], caption: "CA QN77S95HAFXZC 스탠드"}
+      - {combo: uk__77, section: spec-2, highlight: ["1716.6 x 984.1 x 11.2 mm"], caption: UK 본체 치수}
+      - {combo: ca-en-on__77, section: spec-2, highlight: ["1782.6 x 1049.6 x 26.6 inch"], caption: CA 본체 치수}
+      - {combo: uk__77, section: spec, highlight: ["100 Hz (up to 165 Hz)"], caption: UK 주사율}
+      - {combo: us__77, section: spec, highlight: ["165 Hz (VRR Support)"], caption: US 주사율}
+    observation: |
+      [사실] 77" 기준으로 UK는 스탠드 "Slim Oc Stand", 본체 1716.6 x 984.1 x 11.2 mm, 28.2 kg입니다. CA·US는 "Round Feet", 1782.6 x 1049.6 x 26.6 mm, 31.7 kg입니다.
+      [사실] 소비전력도 UK 최대 700 W·일반 127 W, CA·US 최대 770 W·일반 192 W로 다릅니다. 주사율은 UK "100 Hz (up to 165 Hz)", CA·US "165 Hz (VRR Support)"입니다.
+      [사실] 모델 코드는 UK QE77S95HFTXXU, CA QN77S95HAFXZC, US QN77S95HAFXZA입니다. 83"는 CA가 QN83S95HAEXZC(AE)입니다.
+      [추정] UK 모델은 더 얇은 별도 섀시(본체 11.2 mm)입니다. 이름만 같은 S95H입니다.
+    note: |
+      동일 모델 아님. 시리즈명(S95H)·화면 크기로 국가 간 스펙을 복사하지 않습니다. 스펙은 국가별 SKU 단위로 수집합니다.
+      SKU 접두(QE=유럽, QN=북미)와 접미(…FTXXU / …AFXZC / …AFXZA)를 모델 매핑 키로 씁니다.
+
+  - id: quebec-price-fee
+    title: 퀘벡 가격이 온타리오보다 높고 월 할부가 빠짐 (JSON-LD는 온타리오 가격)
+    tags: [국가별 구성 차이, 소스 vs 화면 불일치]
+    panels:
+      - {combo: ca-en-on__77, section: price_bar, highlight: ["From $187.50/mo for 24 mos or $4,499.99"], caption: Ontario}
+      - {combo: ca-en-qc__77, section: price_bar, highlight: ["$4,521.09"], caption: Quebec}
+      - {combo: ca-en-on__77, section: summary, highlight: ["4,500 p"], caption: Ontario 적립 포인트}
+      - {combo: ca-en-qc__77, section: summary, highlight: ["4,521 p"], caption: Quebec 적립 포인트}
+    observation: |
+      [사실] 같은 SKU QN77S95HAFXZC가 Ontario $4,499.99, Quebec $4,521.09입니다(+$21.10). 65"·83"도 +$21.10, 55"는 +$16.75($2,299.99 → $2,316.74)입니다. CA-FR Québec도 같은 금액입니다.
+      [사실] 페이지의 JSON-LD(offers.price)는 Quebec에서도 4499.99로, 화면 가격 $4,521.09와 다릅니다. 가격 표에서 Quebec 칸이 빨간색인 이유입니다.
+      [사실] Quebec 가격 바에는 월 할부 문구가 없습니다. 적립 포인트도 가격을 따라 4,500 p → 4,521 p로 바뀝니다.
+      [사실] 그런데 Quebec의 "Pre-purchase check"에는 "0% APR financing … up to 36 mos. with Affirm" 안내가 그대로 남아 있습니다.
+      [추정] 퀘벡 환경 부담금(éco-frais)이 표시 가격에 포함된 것으로 보입니다. 크기별 차액이 다른 것도 크기 구간별 부담금과 맞습니다.
+    note: |
+      CA 가격은 주(province)별로 저장합니다. Ontario 가격을 Quebec 답변에 쓰면 틀립니다. JSON-LD는 주를 반영하지 않으므로 Quebec 가격 소스로 쓰지 않습니다.
+      가능하면 base_price와 environmental_fee를 나눠 저장합니다. 할부 가능 여부(financing_available)도 주 단위 속성입니다(Fold8 카드와 같은 패턴).
+
+  - id: ca-fr-no-monthly
+    title: CA-FR(온타리오) TV 가격 바에는 월 할부가 없음
+    tags: [CA-FR 번역]
+    panels:
+      - {combo: ca-en-on__55, section: price_bar, highlight: ["From $95.83/mo for 24 mos or $2,299.99"], caption: CA-EN Ontario}
+      - {combo: ca-fr-on__55, section: price_bar, highlight: ["2 299,99 $"], caption: CA-FR Ontario}
+    observation: |
+      [사실] 같은 Ontario·같은 SKU인데 CA-EN 가격 바는 "From $95.83/mo for 24 mos or $2,299.99"이고, CA-FR 가격 바는 "2 299,99 $"만 보여 줍니다. 55·65·77·83" 모두 같습니다.
+      [사실] CA-FR "Vérification avant l'achat"에는 Affirm 0% 할부 안내("jusqu'à 36 mois")가 있습니다. 같은 제품군의 노트북 CA-FR 구매 페이지는 "À partir de 275,00 $/mo."를 보여 줍니다.
+      [추정] TV 제품 페이지의 프랑스어 템플릿이 할부 문구를 렌더링하지 않습니다.
+    note: |
+      할부 정보는 언어별 페이지에서 따로 수집하지 않고, 같은 주의 EN 페이지 값을 쓰되 출처를 남깁니다.
+      fr-CA 답변에서 할부를 언급할 때는 "영어 페이지 기준"임을 붙이거나, 할부 금액 대신 Affirm 안내 문구만 씁니다.
+
+  - id: us-delivery-past-date
+    title: US 배송 예정일이 이미 지난 날짜로 표시됨
+    tags: [사이트 데이터 오류]
+    panels:
+      - {combo: us__77, section: delivery, highlight: ["Get it by Oct. 23"], caption: "77\" (캡쳐: 10/28 17:27 EDT)"}
+      - {combo: us__55, section: delivery, highlight: ["Get it by Oct. 24"], caption: "55\""}
+      - {combo: us__83, section: delivery, highlight: ["Get it by Oct. 30"], caption: "83\""}
+    observation: |
+      [사실] 캡쳐 시각은 2026-10-29 06:24~06:29 KST(뉴욕 기준 10/28 17시대)입니다. ZIP 10001에서 55"·65"는 "Get it by Oct. 24", 77"는 "Get it by Oct. 23"으로 이미 지난 날짜입니다.
+      [사실] 83"만 "Get it by Oct. 30"으로 미래 날짜입니다. 노트북 US 페이지도 "Get it by Nov. 2"로 정상입니다.
+      [추정] TV 배송 예정일 캐시가 갱신되지 않았습니다.
+    note: |
+      배송 예정일은 제품 속성으로 저장하지 않습니다. 수집하더라도 캡쳐 시각보다 이전이면 버립니다.
+      배송 옵션(무료 배송, 설치 $159.00, 초기 설정 $35.00, 매장 픽업 불가)은 ZIP 단위 속성입니다.
+
+  - id: list-price-label
+    title: 정가·할인 표기 방식
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__77, section: price_bar, highlight: ["£3,499.00", "RRP: £3,699.00", "Save £200.00"], caption: UK}
+      - {combo: ca-en-on__77, section: price_bar, highlight: ["$5,999.99 Save $1,500.00"], caption: CA-EN}
+      - {combo: ca-fr-on__77, section: price_bar, highlight: ["5 999,99 $ Économisez 1 500,00 $"], caption: CA-FR}
+      - {combo: us__77, section: price_bar, highlight: ["$3,699.99", "was $4,499.99 Save $800.00"], caption: US}
+    observation: |
+      [사실] UK는 "RRP: £3,699.00"(권장 소비자가)를 쓰고, 요약에서는 "Previous price £3,699.00"이라고 부릅니다. CA는 라벨 없이 취소선 정가 "$5,999.99 Save $1,500.00"입니다. US는 "was $4,499.99 Save $800.00"입니다.
+      [사실] 77" 할인율은 UK 5.4%(£200), CA 25%($1,500), US 17.8%($800)입니다.
+    note: |
+      RRP / Previous price / 취소선 / was는 모두 list_price로 정규화합니다. 라벨 원문은 별도 필드(list_price_label)에 둡니다.
+      UK의 RRP는 법적 의미가 다를 수 있으니(권장가 vs 직전 판매가) 원문 라벨을 버리지 않습니다.
+
+  - id: size-lineup
+    title: 국가별 크기 구성과 US 모델 선택
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__77, section: size, highlight: ["48"], caption: UK}
+      - {combo: ca-en-on__77, section: size, highlight: ["83\""], caption: CA}
+      - {combo: us__77, section: model, highlight: ["OLED S85H 4K", "OLED S90H 4K", "OLED S95H 4K"], caption: US 모델 선택}
+    observation: |
+      [사실] UK는 48·55·65·77(인치 기호 없음), CA·US는 55"·65"·77"·83"입니다. 48"는 UK에만, 83"는 북미에만 있습니다.
+      [사실] US 페이지에는 크기 위에 "Model" 선택이 있어 같은 페이지에서 S85H·S90H·S95H로 바꿀 수 있습니다. UK·CA 페이지에는 없습니다.
+    note: |
+      크기 옵션 값은 숫자만 저장합니다(48, 55 …). 따옴표·"inch"·"pouces"는 표시용입니다.
+      US의 Model 선택은 다른 제품 라인으로 바뀌는 선택입니다. 수집할 때 같은 제품의 변형으로 묶지 않습니다.
+
+  - id: uk-energy-label
+    title: UK에만 에너지 등급과 제품 정보 시트가 있음
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__77, section: summary, highlight: ["Product information sheet"], caption: UK 요약}
+      - {combo: uk__77, section: spec-2, highlight: ["Energy Efficiency Class"], caption: UK 스펙}
+    observation: |
+      [사실] UK 요약에는 에너지 라벨(등급 F)과 "Product information sheet" 링크가 있습니다. 스펙에도 "Energy Efficiency Class: F", "Yearly Power Consumption (EU standard): 176 kWh"가 있습니다.
+      [사실] CA·US 스펙에는 에너지 등급 항목이 없습니다. 전원도 UK AC220-240 V, CA·US AC110-120V입니다.
+    note: |
+      energy_class·yearly_kwh는 UK(EU 규정) 전용 선택 필드입니다. CA·US에서 값이 없다고 오류로 보지 않습니다.

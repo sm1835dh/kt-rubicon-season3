@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fake PDP</title>
+<style>
+  body { font-family: sans-serif; margin: 0; }
+  .col { width: 480px; margin-left: 900px; padding: 20px; }
+  section { padding: 10px 0 40px; }
+  h3.t { font-size: 22px; margin: 0 0 8px; }
+  label { display: block; border: 1px solid #999; padding: 10px; margin: 4px 0; }
+  #specs { width: 900px; margin: 40px 20px; }
+  .tall { height: 19000px; }
+</style>
+<script type="application/ld+json">
+{"@type": "ProductGroup", "hasVariant": [
+  {"sku": "P55B", "offers": {"price": "1000", "priceCurrency": "GBP"}},
+  {"sku": "P55W", "offers": {"price": "1000", "priceCurrency": "GBP"}},
+  {"sku": "P65B", "offers": {"price": "2000", "priceCurrency": "GBP"}},
+  {"sku": "P65W", "offers": {"price": "2000", "priceCurrency": "GBP"}}
+]}
+</script>
+</head>
+<body>
+<div class="col">
+  <section>
+    <h3 class="t">Choose your size</h3>
+    <label for="size-55"><input type="radio" id="size-55" name="size" value="55" data-label='55"'> 55"</label>
+    <label for="size-65"><input type="radio" id="size-65" name="size" value="65" data-label='65"'> 65"</label>
+    <label for="size-77"><input type="radio" id="size-77" name="size" value="77" data-label='77"' data-soldout> 77"</label>
+  </section>
+  <section>
+    <h3 class="t">Choose your colour</h3>
+    <label for="color-black"><input type="radio" id="color-black" name="color" value="Black" data-label="Black"> Black</label>
+    <label for="color-white"><input type="radio" id="color-white" name="color" value="White" data-label="White"> White</label>
+  </section>
+  <section>
+    <h3 class="t">Pre-purchase check</h3>
+    <div>Price: <span id="price"></span></div>
+    <div>SKU: <span id="sku"></span></div>
+    <div id="avail"></div>
+  </section>
+</div>
+<dl id="specs">
+  <dt data-group="Display">Screen Size</dt><dd id="spec-size"></dd>
+  <dt data-group="Display">Resolution</dt><dd>3,840 x 2,160</dd>
+  <dt data-group="Weight">Net Weight</dt><dd id="spec-weight"></dd>
+  <dt data-group="Power">Power Supply</dt><dd>AC220-240V</dd>
+</dl>
+<div class="tall"></div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const PRICE = {"55": "£1,000.00", "65": "£2,000.00", "77": ""};
+  let size = "65", color = "Black";
+  const m = /^P(\d+)([BW])$/.exec(q.get("sku") || "");
+  if (m) { size = m[1]; color = m[2] === "W" ? "White" : "Black"; }
+  const sku = (s, c) => "P" + s + (c === "White" ? "W" : "B");
+  function render() {
+    document.getElementById("size-" + size).checked = true;
+    document.getElementById("color-" + color.toLowerCase()).checked = true;
+    document.querySelectorAll("input[name=size]").forEach(i => i.dataset.modelcode = sku(i.value, color));
+    document.querySelectorAll("input[name=color]").forEach(i => i.dataset.modelcode = sku(size, i.value));
+    document.getElementById("sku").textContent = q.get("broken") ? sku("55", color) : sku(size, color);
+    document.getElementById("avail").textContent = size === "77" ? "No longer available" : "";
+    document.getElementById("spec-size").textContent = size + '"';
+    document.getElementById("spec-weight").textContent = (size * 0.4).toFixed(1) + " kg";
+    document.getElementById("price").textContent = "";
+    setTimeout(() => { document.getElementById("price").textContent = PRICE[size]; }, 100);
+  }
+  document.querySelectorAll("input[name=size]").forEach(i => i.addEventListener("change", () => { size = i.value; render(); }));
+  document.querySelectorAll("input[name=color]").forEach(i => i.addEventListener("change", () => { color = i.value; render(); }));
+  render();
+</script>
+</body>
+</html>

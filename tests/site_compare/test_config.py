@@ -79,12 +79,12 @@ def test_slug():
 
 def test_rundata_roundtrip(tmp_path):
     ctx = Context("uk", "UK", "hubble", "https://x/uk/", "en-GB", "GBP", None)
-    state = State("256GB", "Graphite", None, None, "SM-F976BZKBEUB",
+    state = State({"storage": "256GB", "color": "Graphite"}, None, "SM-F976BZKBEUB",
                   PriceTexts("£1,899.00", "£52.75/mo.", "From …", None))
     shot = Shot("Storage", "storage", 1, "shots/a.png", 400, 300, [TextBox("£1,899.00", 1.0, 2.0, 3.0, 4.0)])
     res = ComboResult("uk__256gb", "uk", "main", {"storage": "256GB", "color": "Graphite"}, state,
                       "https://x/uk/", "ok", Money(1899.0, "GBP"), Offer("SM-F976BZKBEUB", 1899.0, "GBP", None),
-                      True, [shot], [], "shots/full.png", ["w1"], "2026-10-28T01:00:00+09:00")
+                      True, [shot], [], ["shots/full.png"], ["w1"], "2026-10-28T01:00:00+09:00")
     run = RunData("fold8_ultra", "Galaxy Z Fold8 Ultra", "20261028-010000", "2026-10-28T01:00:00+09:00",
                   [1440, 1000], 5000, [ctx], [res])
     run.to_json(tmp_path / "data.json")

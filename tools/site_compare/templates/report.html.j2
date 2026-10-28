@@ -46,17 +46,22 @@ td.diff { background: var(--red-bg); } td.diff a { color: var(--red); }
 td.st-unavailable, td.st-mismatch, td.st-error { background: var(--amber-bg); }
 td.missing { color: var(--muted); }
 td.warned { background: var(--amber-bg); }
+th.spec-only, td.spec-only { color: var(--muted); background: var(--surface-2); }
+table.specs td, table.specs th { font-size: 12px; }
+#key-specs td { white-space: normal; min-width: 120px; }
 .menu td { text-align: center; } .menu td.no { color: var(--muted); } .menu th[scope=row] { white-space: nowrap; }
 .menu tr.raw th { font-style: italic; color: var(--muted); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 0 0 20px; }
 .card h3 { margin: 0 0 6px; }
 .card-warn { background: var(--amber-bg); color: var(--amber); border-radius: 6px; padding: 6px 10px; margin: 8px 0; font-size: 13px; }
-.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; align-items: start; }
+.panels { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; align-items: flex-start; }
+.panels figure { flex: 1 1 300px; min-width: 0; max-width: 640px; }
+.panels figure.wide { flex-basis: 100%; max-width: 100%; }
 figure { margin: 0; }
-figure.wide { grid-column: 1 / -1; }
 .plabel { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
 .imgwrap { position: relative; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
 .imgwrap img { display: block; width: 100%; height: auto; }
+.imgwrap.cropped img { max-width: none; transform-origin: 0 0; }
 .hl { position: absolute; outline: 3px solid var(--red); outline-offset: 2px; border-radius: 3px; pointer-events: none; }
 figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; word-break: break-all; }
 .noimg { padding: 30px 10px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; }
@@ -86,15 +91,21 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
     <ul style="margin:6px 0 10px; padding-left:18px">
       <li>페이지 로드 후, 옵션 클릭 후 각각 {{ (run.wait_ms / 1000)|round(1) }}초 대기. 가격이 비어 있으면 한 번 더 대기</li>
       <li>쿠키 배너는 거부·필수만 버튼으로 닫음. 트레이드인 Yes·장바구니·로그인은 누르지 않음</li>
+      {% if product.mode == "click" %}
       <li>색상은 {{ product.fixed_color }} 고정. 색상별 가격은 {{ product.storages[0] }}에서만 확인</li>
       <li>US 통신사는 {{ product.carriers|join(", ") }}. Verizon 하위 선택은 페이지 기본값</li>
       <li>가격 표의 기준 가격은 선택한 용량의 기기 일시불 가격(추가 옵션 없음)</li>
+      {% else %}
+      <li>조합: 가격이 달라지는 옵션의 값을 페이지에서 찾아 모두 캡쳐(아래 표의 "조합 축"). 고정 축은 그 값만 선택</li>
+      <li>가격 표의 가격은 각 조합의 기기 일시불 가격(추가 옵션 없음). 주요 스펙 표와 카드는 기준 SKU 조합 기준</li>
+      {% endif %}
     </ul>
     <div class="scroll"><table>
-      <thead><tr><th>구분</th><th>URL</th><th>지역</th></tr></thead>
+      <thead><tr><th>구분</th><th>URL</th><th>지역</th>{% if product.mode != "click" %}<th>기준 SKU</th><th>조합 축</th>{% endif %}</tr></thead>
       <tbody>
       {% for c in run.contexts %}
-        <tr><td>{{ c.label }}</td><td><a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.url }}</a></td><td>{{ c.region or "—" }}</td></tr>
+        <tr><td>{{ c.label }}</td><td><a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.url }}</a></td><td>{{ c.region or "—" }}</td>
+          {% if product.mode != "click" %}<td>{{ c.ref_sku or "—" }}</td><td>{{ ctx_axes[c.id] }}</td>{% endif %}</tr>
       {% endfor %}
       </tbody>
     </table></div>
@@ -102,7 +113,9 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
       {% for s in ["ok", "unavailable", "mismatch", "error"] %}<span class="chip {{ s }}">{{ s }} {{ status[s] }}</span>{% endfor %}
       <span class="chip warn">경고 있는 조합 {{ n_warned }} (경고 {{ n_warn }}건)</span>
       <span class="chip"><a href="data.json">data.json</a></span>
+      <span class="chip"><a href="../../index.html">전체 목차</a></span>
     </div>
+    {% if run.discovered %}<div class="muted" style="margin-top:6px">발견한 조합 수: {% for c in run.contexts if c.id in run.discovered %}{{ c.label }} {{ run.discovered[c.id] }}{% if not loop.last %} · {% endif %}{% endfor %}</div>{% endif %}
   </div>
 </header>
 
@@ -111,11 +124,11 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
 <section id="summary">
   <h2>요약</h2>
   <h3>가격 <span class="muted">(기기 일시불 · 칸을 누르면 부록의 해당 조합으로 이동 · 빨간 칸 = 화면 가격 ≠ JSON-LD)</span></h3>
-  <div class="scroll"><table>
-    <thead><tr><th></th>{% for c in cols %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
+  <div class="scroll"><table id="price-table">
+    <thead><tr><th></th>{% for c in cols %}<th{% if c.ctx.spec_only %} class="spec-only"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
     <tbody>
     {% for row in price_rows %}
-      <tr><th scope="row">{{ row.storage }}</th>
+      <tr><th scope="row">{{ row.label }}</th>
       {% for cell in row.cells %}
         <td class="{{ cell.cls }}" title="{{ cell.title }}">{% if cell.id %}<a href="#combo-{{ cell.id }}">{{ cell.text }}</a>{% else %}{{ cell.text }}{% endif %}{% if cell.was %}<s>{{ cell.was }}</s>{% endif %}{% if cell.status and cell.status != "ok" %}<div class="chip {{ cell.status }}">{{ cell.status }}</div>{% endif %}{% if cell.warn %}<div class="chip warn">경고 {{ cell.warn }}</div>{% endif %}</td>
       {% endfor %}
@@ -124,7 +137,21 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
     </tbody>
   </table></div>
 
-  <h3>메뉴(구매 단계) 구성 <span class="muted">({{ product.storages[0] }} 기준 · 숫자는 페이지 안 순서)</span></h3>
+  {% if key_spec_rows %}
+  <h3>주요 스펙 비교 <span class="muted">(컨텍스트별 기준 SKU · 값은 원문 · 칸에 마우스를 올리면 원래 라벨)</span></h3>
+  <div class="scroll"><table id="key-specs" class="specs">
+    <thead><tr><th></th>{% for c in cols %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in key_spec_rows %}
+      <tr><th scope="row">{{ row.label }}</th>
+      {% for cell in row.cells %}{% if cell %}<td title="{{ cell.label }}">{{ cell.value }}</td>{% else %}<td class="no">—</td>{% endif %}{% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+
+  <h3>메뉴(구매 단계) 구성 <span class="muted">({{ product.storages[0] if product.storages else "기준 SKU" }} 기준 · 숫자는 페이지 안 순서)</span></h3>
   <div class="scroll"><table class="menu">
     <thead><tr><th></th>{% for c in cols %}<th>{{ c.label }}</th>{% endfor %}</tr></thead>
     <tbody>
@@ -158,7 +185,8 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
       <figure{% if p.wide %} class="wide"{% endif %}>
         <div class="plabel">{{ p.label }} <span class="muted">· {{ p.section }}</span>{% if p.status and p.status != "ok" %} <span class="chip {{ p.status }}">{{ p.status }}</span>{% endif %}{% if p.combo_warnings %} <span class="chip warn" title="{{ p.combo_warnings|join('\n') }}">경고 {{ p.combo_warnings|length }}</span>{% endif %}</div>
         {% if p.img %}
-        <div class="imgwrap"><a href="{{ p.img }}" target="_blank"><img src="{{ p.img }}" alt="{{ p.label }} {{ p.section }}" loading="lazy"></a>
+        {% set c = p.crop %}
+        <div class="imgwrap{% if c %} cropped{% endif %}" style="{% if p.view_w %}max-width:{{ p.view_w }}px;{% endif %}{% if c %}aspect-ratio:{{ c.x1 - c.x0 }} / {{ c.y1 - c.y0 }}{% endif %}"{% if c %} title="강조 부분만 확대 · 누르면 원본"{% endif %}><a href="{{ p.img }}" target="_blank"><img src="{{ p.img }}" alt="{{ p.label }} {{ p.section }}" loading="lazy"{% if c %} style="width:{{ c.scale }}%;transform:translate(-{{ c.tx }}%,-{{ c.ty }}%)"{% endif %}></a>
           {% for b in p.boxes %}<div class="hl" style="left:{{ b.left }}%;top:{{ b.top }}%;width:{{ b.width }}%;height:{{ b.height }}%"></div>{% endfor %}
         </div>
         {% else %}<div class="noimg">캡쳐 없음</div>{% endif %}
@@ -178,6 +206,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
 
 <section id="appendix">
   <h2>부록</h2>
+  {% if checks %}
   <h3>색상별 가격 ({{ product.storages[0] }}{% if product.carriers %}, US는 {{ product.carriers[0] }}{% endif %})</h3>
   <div class="scroll"><table>
     <thead><tr><th></th>{% for col in colors %}<th>{{ col }}</th>{% endfor %}</tr></thead>
@@ -193,6 +222,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
     {% endfor %}
     </tbody>
   </table></div>
+  {% endif %}
 
   {% for c in run.contexts %}
   <h3>{{ c.label }}</h3>
@@ -202,7 +232,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
       <h4><span>{{ r.combo_id }}</span><span class="chip {{ r.status }}">{{ r.status }}</span></h4>
       <table>
         <tr><th>선택</th><td>{{ r.want.values()|join(" / ") }}{% if r.kind == "color_check" %} <span class="muted">(색상 확인)</span>{% endif %}</td></tr>
-        <tr><th>화면 상태</th><td>{% if r.got %}{{ [r.got.storage, r.got.color, r.got.carrier, r.got.region]|select|join(" | ") }}<br><span class="muted">{{ r.got.sku }}</span>{% else %}—{% endif %}</td></tr>
+        <tr><th>화면 상태</th><td>{% if r.got %}{{ (r.got.selection.values()|list + [r.got.region])|select|join(" | ") }}<br><span class="muted">{{ r.got.sku }}</span>{% else %}—{% endif %}</td></tr>
         <tr><th>기준 가격</th><td>{{ r.got.prices.base if r.got else "—" }}{% if r.price_match is false %} <span class="chip error">JSON-LD 불일치</span>{% elif r.price_match %} <span class="chip ok">JSON-LD 일치</span>{% endif %}</td></tr>
         <tr><th>월 할부</th><td>{{ r.got.prices.monthly if r.got else "" }}</td></tr>
         <tr><th>정가(was)</th><td>{{ r.got.prices.was if r.got else "" }}</td></tr>
@@ -212,13 +242,22 @@ details summary { cursor: pointer; color: var(--accent); font-size: 13px; margin
         <tr><th>캡쳐 시각</th><td>{{ r.captured_at }}</td></tr>
       </table>
       {% if r.warnings %}<ul class="warns">{% for w in r.warnings %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
-      {% if r.full_shot %}<a class="thumb" href="{{ r.full_shot }}" target="_blank"><img src="{{ r.full_shot }}" alt="{{ r.combo_id }} 전체" loading="lazy"></a>{% endif %}
+      {% if r.full_shots %}<a class="thumb" href="{{ r.full_shots[0] }}" target="_blank"><img src="{{ r.full_shots[0] }}" alt="{{ r.combo_id }} 전체" loading="lazy"></a>
+      <div class="muted" style="font-size:12px">전체 캡쳐: {% for f in r.full_shots %}<a href="{{ f }}" target="_blank">{{ loop.index }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</div>{% endif %}
       {% if r.sections or r.extras %}
       <details><summary>섹션 캡쳐 {{ r.sections|length }}장{% if r.extras %} · 펼친 레이어 {{ r.extras|length }}장{% endif %}</summary>
         <div class="shots">
         {% for s in r.sections %}<div class="t">{{ s.order }}. {{ s.title }}{% if s.section_id %} → {{ sec_labels.get(s.section_id, s.section_id) }}{% endif %}</div><a href="{{ s.path }}" target="_blank"><img src="{{ s.path }}" alt="{{ s.title }}" loading="lazy"></a>{% endfor %}
         {% for s in r.extras %}<div class="t">레이어 {{ s.order }}. {{ s.title }}</div><a href="{{ s.path }}" target="_blank"><img src="{{ s.path }}" alt="{{ s.title }}" loading="lazy"></a>{% endfor %}
         </div>
+      </details>
+      {% endif %}
+      {% if r.specs or r.spec_shots %}
+      <details><summary>스펙 {{ r.specs|length }}개{% if r.spec_shots %} · 캡쳐 {{ r.spec_shots|length }}장{% endif %}</summary>
+        <table class="specs">
+        {% for sp in r.specs %}<tr>{% if loop.first or sp.group != r.specs[loop.index0 - 1].group %}<th>{{ sp.group }}</th>{% else %}<th></th>{% endif %}<td>{{ sp.label }}</td><td>{{ sp.value }}</td></tr>{% endfor %}
+        </table>
+        <div class="shots">{% for s in r.spec_shots %}<div class="t">{{ s.title }}</div><a href="{{ s.path }}" target="_blank"><img src="{{ s.path }}" alt="{{ s.title }}" loading="lazy"></a>{% endfor %}</div>
       </details>
       {% endif %}
     </article>

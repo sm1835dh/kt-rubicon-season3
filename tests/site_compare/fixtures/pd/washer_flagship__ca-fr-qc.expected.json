@@ -1,0 +1,63 @@
+{
+ "options": {
+  "color": [
+   [
+    "gris",
+    "Gris",
+    "WF90F53ADSA5",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Gris"
+  },
+  "sku": "WF90F53ADSA5",
+  "prices": {
+   "base": "1 499,99 $",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Choisissez votre couleur",
+  "Dimensions",
+  "Samsung Care+",
+  "Éléments complémentaires",
+  "Vérification avant l'achat",
+  "Offers"
+ ],
+ "spec_count": 47,
+ "spec_sample": [
+  [
+   "Aperçu",
+   "Classe d’efficacité énergétique",
+   "Tier 3 (Advanced Tier)"
+  ],
+  [
+   "Aperçu",
+   "Technologie VRT",
+   "IA VRT+"
+  ],
+  [
+   "Aperçu",
+   "Caractéristiques physiques",
+   "686 x 984 x 875 mm27 x 38.7 x 34.5 inches"
+  ],
+  [
+   "Aperçu",
+   "Poids net",
+   "102"
+  ],
+  [
+   "Conception",
+   "Couleur de l'appareil",
+   "Acier sombre"
+  ]
+ ],
+ "offers": [
+  "WF90F53ADSA5"
+ ]
+}

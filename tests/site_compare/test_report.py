@@ -23,12 +23,12 @@ def _shot(cid, title, sid, order, texts=()):
 
 
 def _res(cid, ctx, want, base_text, match, shots):
-    state = State(want["storage"], "Graphite", want.get("carrier"), None, "SKU-" + cid,
+    state = State({k: v for k, v in want.items()}, None, "SKU-" + cid,
                   PriceTexts(base_text, None, "headline", None))
     money = Money(float(re.sub(r"[^\d.]", "", base_text)), "GBP" if ctx == "uk" else "USD")
     return ComboResult(cid, ctx, "main", want, state, f"https://www.samsung.com/{ctx}/x/", "ok", money,
                        Offer("SKU-" + cid, money.value, money.currency, None), match, shots, [],
-                       f"shots/{cid}__full.png", [], "2026-10-28T01:00:00+09:00")
+                       [f"shots/{cid}__full.png"], [], "2026-10-28T01:00:00+09:00")
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def run_dir(tmp_path):
     for r in results:
         for s in r.sections:
             (tmp_path / s.path).write_bytes(PNG)
-        (tmp_path / r.full_shot).write_bytes(PNG)
+        (tmp_path / r.full_shots[0]).write_bytes(PNG)
     RunData("fold8_ultra", "Galaxy Z Fold8 Ultra", "20261028-010000", "2026-10-28T01:00:00+09:00",
             [1440, 1000], 5000, [UK, US], results).to_json(tmp_path / "data.json")
     return tmp_path

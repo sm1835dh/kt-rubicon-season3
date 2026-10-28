@@ -1,0 +1,123 @@
+# T-Style 프렌치도어 냉장고 차이점 카드. combo/section은 data.json 기준, highlight는 화면 텍스트(포함 여부로 찾음).
+# UK RF65DG960E…(646 L)와 북미 RF23D…9600(23 cu.ft.)은 이름·모델 코드가 다르지만 크기(폭 912/911 mm)가 거의 같은 같은 계열입니다.
+cards:
+  - id: uk-capacity-url
+    title: UK URL은 645L, 화면·스펙은 646L
+    tags: [사이트 데이터 오류]
+    panels:
+      - {combo: uk__silver, section: price_bar, highlight: ["Bespoke AI 4 Door French Door Refrigerator Series 9 SpaceMax 646L"], caption: 상단 가격 바}
+      - {combo: uk__silver, section: capacity, highlight: ["646 L"], caption: 용량 선택}
+    observation: |
+      [사실] UK 제품 URL은 "…/rf9000d-rf9000dc-t-style-french-door-beverage-center-645l-silver-rf65dg960esreu/"로 645L입니다.
+      [사실] 화면 제품명은 "… SpaceMax 646L", 용량 선택은 "646 L", 스펙 "Gross Total(Litre)"은 646 ℓ입니다.
+      [사실] URL의 "rf9000d", "t-style", "beverage-center"도 현재 제품명("Bespoke AI 4 Door French Door Refrigerator Series 9")에는 없습니다.
+    note: |
+      URL 슬러그에서 용량·모델명을 추출하지 않습니다. 용량은 스펙(Gross Total) 값을 쓰고, URL은 식별자로만 씁니다.
+
+  - id: uk-trade-in-by-colour
+    title: UK 같은 모델인데 색상별 트레이드인 할인 한도가 다름
+    tags: [사이트 데이터 오류]
+    panels:
+      - {combo: uk__silver, section: trade_in, highlight: ["Want up to £100.00 off?"], caption: Silver}
+      - {combo: uk__black, section: trade_in, highlight: ["Want up to £200.00 off?"], caption: Black}
+    observation: |
+      [사실] 가격은 Silver·Black 모두 £3,399.00으로 같습니다. 그런데 트레이드인(오래된 가전 회수) 할인 한도가 Silver "up to £100.00", Black "up to £200.00"입니다.
+      [추정] 색상 SKU별로 프로모션 데이터가 따로 들어가 있습니다. 의도한 차이인지 입력 오류인지 확인이 필요합니다.
+    note: |
+      트레이드인·오퍼는 모델이 아니라 SKU(색상) 단위로 수집합니다. 한 색상 값을 다른 색상에 복사하지 않습니다.
+
+  - id: ca-capacity-units
+    title: CA 용량 표기 (23 cu.ft. vs 22.8 cu.ft, CA-FR pi³ vs cu.ft)
+    tags: [CA-FR 번역, 국가별 구성 차이]
+    panels:
+      - {combo: ca-en-on__silver, section: capacity, highlight: ["23 cu.ft."], caption: CA-EN 용량 선택}
+      - {combo: ca-fr-on__acierinoxydable, section: price_bar, highlight: ["Machine à glaçons double 23 pi³", "23 cu.ft"], caption: CA-FR 상단 가격 바}
+      - {combo: ca-fr-on__acierinoxydable, section: capacity, highlight: ["23 cu.ft"], caption: CA-FR 용량 선택}
+    observation: |
+      [사실] CA 제품명·용량 선택은 "23 cu.ft."인데, 스펙 "Net Total"은 "22.8 cu.ft"입니다(반올림 표기).
+      [사실] CA-FR 제품명은 "23 pi³"(프랑스어 단위)인데, 바로 옆 용량 표시와 용량 선택은 영어 "23 cu.ft"입니다. 스펙도 라벨은 "(pi³)", 값은 "8.8 cu.ft"입니다.
+      [사실] CA-FR 스펙 "Net Weight (kg)" 라벨은 번역되지 않았습니다.
+    note: |
+      용량 단위는 cu.ft = pi³ = ft³로 정규화합니다. 비교에는 스펙 값(22.8)을, 표시에는 제품명 값(23)을 씁니다. UK는 리터(646 ℓ ≈ 22.8 cu.ft)입니다.
+
+  - id: energy-standard
+    title: 에너지 소비량은 국가별 기준이 달라 비교 불가
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__silver, section: summary, highlight: ["Product information sheet"], caption: UK 요약 (에너지 등급 E)}
+      - {combo: uk__silver, section: spec-2, highlight: ["368 kWh/year", "Energy Efficiency Class"], caption: UK 스펙}
+      - {combo: ca-en-on__silver, section: spec, highlight: ["634 kWh/year"], caption: CA 스펙}
+    observation: |
+      [사실] UK는 에너지 등급 "E"와 "368 kWh/year", CA는 "634 kWh/year"입니다. 크기(폭 912 vs 911 mm, 높이 1830 vs 1832 mm)는 거의 같습니다.
+      [추정] UK는 EU 시험 기준, CA는 북미(DOE·NRCan) 기준이라 숫자가 크게 다릅니다.
+    note: |
+      energy_consumption은 {value, unit, standard(EU|DOE)}로 저장하고, 기준이 다르면 비교하지 않습니다. energy_class는 UK 전용 필드입니다.
+
+  - id: price-and-financing
+    title: 가격·할부 표기 (CA .98 가격, 퀘벡·CA-FR 할부 없음)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__silver, section: price_bar, highlight: ["£3,399.00"], caption: UK}
+      - {combo: ca-en-on__silver, section: price_bar, highlight: ["From $91.67/mo for 36 mos or $3,299.98"], caption: CA-EN Ontario}
+      - {combo: ca-en-qc__silver, section: price_bar, highlight: ["$3,299.98"], caption: CA-EN Quebec}
+      - {combo: ca-fr-on__acierinoxydable, section: price_bar, highlight: ["3 299,98 $"], caption: CA-FR Ontario}
+    observation: |
+      [사실] UK는 가격만(£3,399.00) 보여 주고 할부는 "0% Finance available, view options" 레이어에 있습니다.
+      [사실] CA-EN Ontario는 "From $91.67/mo for 36 mos or $3,299.98"입니다. Quebec와 CA-FR Ontario에는 월 할부가 없습니다(TV와 같은 패턴).
+      [사실] TV와 달리 냉장고는 Quebec 가격이 Ontario와 같습니다($3,299.98). 가격 끝자리가 .98입니다.
+    note: |
+      퀘벡 가격 차이는 품목마다 다릅니다(TV는 +$21.10, 냉장고는 0). 주별 가격을 품목마다 따로 수집합니다.
+
+  - id: na-model-variant
+    title: CA와 US도 다른 모델 (DG "F90" vs DB "Bespoke AI 4-Door Flex") — 동일 모델 아님
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: ca-en-on__silver, section: price_bar, highlight: ["4-Door French Door Refrigerator F90", "RF23DG9600SRAC"], caption: CA}
+      - {combo: us__counterdepth, section: price_bar, highlight: ["Bespoke AI 4-Door Flex™", "RF23DB9600QL / RF23DB9600QLAA"], caption: US}
+    observation: |
+      [사실] CA는 RF23DG9600SRAC "4-Door French Door Refrigerator F90"(Silver 1색), US는 RF23DB9600QLAA "Bespoke AI 4-Door Flex™"(Stainless Steel 1색)입니다. UK RF65DG960E…는 Silver·Black 2색입니다.
+      [사실] 총용량 22.8 cu.ft, 에너지 634 kWh/yr, 폭 35.875"는 CA·US가 같습니다. 높이는 CA 72.1" / US 73", 무게는 CA 137 kg / US 317.5 lbs(≈144 kg)로 다릅니다.
+      [추정] 같은 본체에 문·외관이 다른 파생 모델입니다.
+    note: |
+      동일 모델 아님. 북미끼리도 CA·US SKU를 같은 제품으로 묶지 않습니다. 스펙 단위는 US lbs·inch, CA kg·inch·mm 혼용, UK mm·kg·ℓ입니다. 정규화할 때 단위를 함께 저장합니다.
+
+  - id: us-depth-axis
+    title: US 페이지에서만 깊이(Counter/Full Depth)로 다른 모델 선택
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: us__counterdepth, section: depth, highlight: ["Counter Depth", "Full Depth"], caption: 깊이 선택}
+      - {combo: us__counterdepth, section: price_bar, highlight: ["23 cu.ft.", "$2,799.00"], caption: Counter Depth}
+      - {combo: us__fulldepth, section: price_bar, highlight: ["29 cu.ft.", "$2,699.00"], caption: Full Depth}
+    observation: |
+      [사실] US 페이지는 "Depth" 선택으로 Counter Depth(RF23DB9600QLAA, 23 cu.ft., $2,799.00)와 Full Depth(RF29DB9600QLAA, 29 cu.ft., $2,699.00)를 오갑니다. URL도 바뀝니다.
+      [사실] 용량이 더 큰 Full Depth가 $100 더 쌉니다. UK·CA 페이지에는 깊이 선택이 없습니다.
+    note: |
+      깊이 선택은 다른 모델(용량·치수 다름)로 바뀌는 선택입니다. 수집할 때 depth를 SKU 속성으로 저장하고, "같은 제품의 옵션"으로 보지 않습니다.
+
+  - id: us-comp-value
+    title: US "Comp. Value"는 요약의 정가보다 $29.99 높음 (설치비 포함)
+    tags: [소스 vs 화면 불일치]
+    panels:
+      - {combo: us__counterdepth, section: price_bar, highlight: ["Comp. Value: $3,728.99", "Save $929.99"], caption: 상단 가격 바}
+      - {combo: us__counterdepth, section: summary, highlight: ["$3,699.00", "- $900.00", "$2,799.00"], caption: 주문 요약}
+      - {combo: us__counterdepth, section: delivery, highlight: ["was $29.99"], caption: 배송·설치}
+    observation: |
+      [사실] 상단 가격 바는 "Comp. Value: $3,728.99 / Save $929.99"입니다. 주문 요약은 "$3,699.00 − Instant Savings $900.00 = Total $2,799.00, Save $929.99"입니다.
+      [사실] $3,728.99 − $3,699.00 = $29.99는 배송·설치의 원래 가격("Free, was $29.99")과 같습니다.
+      [추정] Comp. Value와 Save 금액에 무료 설치 혜택이 포함돼 있습니다. 가격 표의 정가(취소선)는 Comp. Value를 그대로 읽은 값입니다.
+    note: |
+      US 냉장고 list_price는 주문 요약의 시작 가격($3,699.00)을 쓰고, Comp. Value는 별도 필드(comp_value)로 둡니다. 할인액(save)도 기기 할인($900)과 서비스 할인($29.99)을 나눕니다.
+
+  - id: us-services
+    title: US 전용 구매 옵션 (오픈박스, 수거, 정수 필터 구독, 다년 Care+)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: us__counterdepth, section: open_box, highlight: ["$2,295.18", "was $2,799.00"], caption: 오픈박스}
+      - {combo: us__counterdepth, section: delivery, highlight: ["Haul Away", "6-month automatic filter replacement"], caption: 배송·수거·필터}
+      - {combo: us__counterdepth, section: care, highlight: ["3-year plan", "5-year plan", "7-year plan"], caption: Care+}
+    observation: |
+      [사실] US에는 오픈박스 가격($2,295.18, was $2,799.00), 기존 제품 수거(Haul Away $50.00), 정수 필터 6개월 구독($34.99, was $49.99)이 있습니다.
+      [사실] Care+는 3·5·7년 플랜($69.99 / $139.99 / $349.99)입니다. CA는 Care+ 하나, UK는 Care+ 대신 트레이드업(가전 회수)입니다.
+      [사실] ZIP 10001 기준 배송·설치는 무료(was $29.99), 매장 픽업은 "Not Available", 배송 예정일은 "Oct. 30"입니다.
+    note: |
+      오픈박스는 별도 SKU 상태(condition: open_box)로 저장하고 새 제품 가격과 섞지 않습니다. 수거·필터·설치는 부가 서비스(add_on_services)로 둡니다.

@@ -1,0 +1,53 @@
+{
+ "options": {},
+ "state": {
+  "selection": {
+   "memory": "32 GB",
+   "screen": "16\"",
+   "processor": "Intel® Core™ Ultra 7 processor 356H",
+   "graphic": "Intel®Graphics",
+   "os": "Windows 11 Famille",
+   "connectivity": "Wi Fi",
+   "device": "Galaxy Book6 Pro",
+   "storage": "1 TB",
+   "color": "Gris"
+  },
+  "sku": "NP960XJG-KG1CA",
+  "prices": {
+   "base": "3 299,99 $",
+   "monthly": null,
+   "was": "3 599,99 $"
+  },
+  "available": null
+ },
+ "sections": [
+  "Price bar",
+  "Appareil",
+  "Système d’exploitation",
+  "Couleur",
+  "Mémoire",
+  "Stockage",
+  "Connectivité",
+  "Taille de l’écran",
+  "Processeur",
+  "Caractéristiques graphiques",
+  "Samsung Échange",
+  "Samsung Care+",
+  "Offres",
+  "Acheter Directement. Obtenez Plus.",
+  "Summary"
+ ],
+ "spec_count": 0,
+ "spec_sample": [],
+ "offers": [
+  "NP740VJG-KA1CA",
+  "NP740VJG-KG1CA",
+  "NP740VJG-KG2CA",
+  "NP760XJG-KG1CA",
+  "NP760XJG-KG2CA",
+  "NP940XJG-KG1CA",
+  "NP960UJG-KG2CA",
+  "NP960XJG-KG1CA",
+  "NP960XJG-KG2CA"
+ ]
+}

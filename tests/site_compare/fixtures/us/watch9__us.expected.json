@@ -1,0 +1,95 @@
+{
+ "options": {
+  "size": [
+   [
+    "40mm",
+    "40mm",
+    "SM-L340NZKAXAA",
+    true
+   ],
+   [
+    "44mm",
+    "44mm",
+    "SM-L350NZKAXAA",
+    true
+   ]
+  ],
+  "connectivity": [
+   [
+    "bluetooth",
+    "bluetooth",
+    "SM-L340NZKAXAA",
+    true
+   ],
+   [
+    "lte",
+    "lte",
+    "SM-L345UZKAXAA",
+    true
+   ]
+  ],
+  "color": [
+   [
+    "cream",
+    "cream",
+    "SM-L340NZEAXAA",
+    true
+   ],
+   [
+    "graphite",
+    "graphite",
+    "SM-L340NZKAXAA",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "size": "40mm",
+   "connectivity": "bluetooth",
+   "color": "Graphite",
+   "band_type": "sport",
+   "band_color": "black",
+   "band_size": "small/medium"
+  },
+  "sku": "SM-L340NZKAXAA",
+  "prices": {
+   "base": "$379.99",
+   "monthly": "$15.83",
+   "was": null
+  },
+  "available": null
+ },
+ "sections": null,
+ "spec_count": 27,
+ "spec_sample": [
+  [
+   "Network/Bearer",
+   "Infra",
+   "Wi-Fi Only, Bluetooth Only"
+  ],
+  [
+   "Audio and Video",
+   "Audio Playing Format",
+   "MP3, M4A, 3GA, AAC, OGG, OGA, WAV, AMR, AWB"
+  ],
+  [
+   "Connectivity",
+   "Location Technology",
+   "GPS, Glonass, Beidou, Galileo, QZSS"
+  ],
+  [
+   "Connectivity",
+   "Wi-Fi",
+   "802.11a/b/g/n 2.4GHz+5GHz"
+  ],
+  [
+   "Connectivity",
+   "NFC",
+   "Yes"
+  ]
+ ],
+ "offers": [
+  "SM-L340NZKAXAA"
+ ]
+}

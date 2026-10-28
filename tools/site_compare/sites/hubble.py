@@ -1,17 +1,22 @@
 """Driver for the hubble buying tool used by samsung.com/uk, /ca, /ca_fr buy pages."""
 from __future__ import annotations
 
+import html
 import re
 from typing import Iterator
 
 from ..model import Context, PriceTexts, Product, State
 from ..prices import money_tokens
-from .base import Box, OptionNotFound, OptionUnavailable
+from .base import BaseDriver, Box, OptionNotFound, OptionUnavailable
 
 WAIT_MS = 5000  # spec: wait 5s after (re)load
 REGION_NAMES = {"CA-ON": ["Ontario"], "CA-QC": ["Québec", "Quebec"]}
 REGION_BTN = "button.menu__select-field[data-aria-label='change region']"
 STORAGE = "input.hubble-pd-radio__input[name^='memory-rdo']"
+RADIO_GROUPS = {"memory": "memories-rdo", "screen": "screensize-rdo", "processor": "processor-rdo",
+                "graphic": "graphic-rdo", "os": "sim-rdo", "connectivity": "connectivity-rdo", "device": "device-rdo"}
+SNAPSHOT_KEEP = [".hubble-price-bar", ".hubble-product__options", ".hubble-product__summary",
+                 ".hubble-offer-banner-v2-wrap", ".cod03-delivery-location-selector"]
 COLOR = "input.hubble-pd-radio__input[name$='color']"
 
 _SECTIONS_JS = r"""
@@ -62,9 +67,13 @@ def _norm(s: str | None) -> str:
     return re.sub(r"\s+", "", (s or "")).lower()
 
 
-class HubbleDriver:
+class HubbleDriver(BaseDriver):
     def prepare(self, page, ctx: Context) -> list[str]:
         warnings: list[str] = []
+        try:  # CA/CA-FR series pages reload themselves once shortly after load
+            page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
         _click_if_visible(page, "#truste-consent-required")
         if ctx.region and not self._region_ok(page, ctx.region):
             # The province picker does not apply headless; the site keeps the choice in this cookie.
@@ -115,30 +124,51 @@ class HubbleDriver:
             raise OptionUnavailable(f"{axis} {value} is disabled")
         self._click_radio(page, rid)
 
+    def sku_url(self, ctx: Context, sku: str | None) -> str | None:
+        return f"{ctx.url.split('?')[0]}?modelCode={sku}" if sku else None
+
     def read_state(self, page, ctx: Context, product: Product) -> State:
-        d = page.evaluate(f"""() => {{
+        d = page.evaluate(f"""(groups) => {{
           const st = document.querySelector("{STORAGE}:checked"), co = document.querySelector("{COLOR}:checked");
           const lab = st && (document.querySelector('label[for="' + st.id + '"]') || st.closest('label'));
           const cart = document.querySelector('.price-bar-cart-btn[data-modelcode]');
           const bar = document.querySelector('.hubble-price-bar__price');
+          const total = document.querySelector('.hubble-price-bar__price-total-text');
+          const save = document.querySelector('.hubble-price-bar__price-total-save-inner');
           const was = lab && lab.querySelector('del, s, [class*=was], [class*=strike]');
+          const sel = {{}};
+          for (const [axis, name] of Object.entries(groups)) {{  // radio names carry stray spaces ("memory-rdo ")
+            const i = [...document.querySelectorAll('input.hubble-pd-radio__input')].find(e => e.name.trim() === name && e.checked);
+            if (i) sel[axis] = i.dataset.displayname || i.dataset.englishname || '';
+          }}
           return {{storage: st && st.dataset.displayname, color_en: co && co.dataset.englishname,
-                  color_code: co && co.dataset.modelcode, sku: (cart && cart.dataset.modelcode) || (co && co.dataset.modelcode),
-                  label: lab && lab.innerText, headline: bar && bar.innerText, was: was && was.innerText}};
-        }}""")
+                  color_dn: co && co.dataset.displayname, color_code: co && co.dataset.modelcode,
+                  sku: (cart && cart.dataset.modelcode) || (co && co.dataset.modelcode), sel,
+                  label: lab && lab.innerText, headline: bar && bar.innerText, total: total && total.innerText,
+                  save: save && save.innerText, was: was && was.innerText}};
+        }}""", RADIO_GROUPS)
         storage = (d["storage"] or "").split("｜")[0].strip() or None
         color = None
-        for name, code in product.colors.items():
+        for name, code in product.colors.items():  # Fold8: colour by name or SKU colour code
             if (d["color_en"] or "").lower() == name.lower() or (d["color_code"] or "")[8:10] == code:
                 color = name
                 break
-        toks = money_tokens(d["label"] or "", ctx.locale)
+        if color is None and not product.colors:
+            color = html.unescape(d["color_dn"] or d["color_en"] or "").strip() or None
         label = d["label"] or ""
+        toks = money_tokens(label, ctx.locale)
         monthly = toks[0] if len(toks) > 1 and "/mo" in label else None
+        if not toks:  # laptops: storage tiles carry no price; read the price bar total ("£63.87/mo. or £2,299.00")
+            total = d["total"] or ""
+            toks = money_tokens(total, ctx.locale)
+            monthly = toks[0] if len(toks) > 1 and "/mo" in total else None
+        was = d["was"] or ((money_tokens(d["save"] or "", ctx.locale) or [None])[0])
         ws = lambda s: re.sub(r"\s+", " ", s).strip() if s else None
-        return State(storage, color, None, self._region_text(page), d["sku"],
+        selection = {k: html.unescape(v).split("｜")[0].strip() for k, v in d["sel"].items() if v}
+        selection.update({k: v for k, v in (("storage", storage), ("color", color)) if v})
+        return State(selection, self._region_text(page), d["sku"],
                      PriceTexts(base=toks[-1] if toks else None, monthly=monthly, headline=ws(d["headline"]),
-                                was=ws(d["was"])))
+                                was=ws(was)))
 
     def section_boxes(self, page) -> list[tuple[str, Box]]:
         # Jumping straight back from far down leaves the price bar stuck at top 0; a small scroll event

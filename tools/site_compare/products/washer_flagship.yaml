@@ -1,0 +1,43 @@
+id: washer_flagship
+title: 드럼세탁기 최상위 모델 (UK WF90H/WF90F · NA WF90F53)
+axes: [{name: color, iterate: true}]
+contexts:
+  - {id: uk,       label: "UK · WF90H",       driver: pd, locale: en-GB, currency: GBP, ref_sku: WF90H11C4WT1,
+     url: "https://www.samsung.com/uk/washers-and-dryers/washing-machines/wf90h24-11kg-white-wf90h11c4wt1/"}
+  - {id: uk-f,     label: "UK · WF90F (판매 종료)", driver: pd, locale: en-GB, currency: GBP, ref_sku: WF90F09C4SU1,
+     spec_only: true, axes: [],
+     url: "https://www.samsung.com/uk/washers-and-dryers/washing-machines/wf90f24-front-load-washer-a-55-percent-energy-efficiency-ai-home-ai-wash-9kg-silver-wf90f09c4su1/"}
+  - {id: ca-en-on, label: "CA-EN · Ontario",  driver: pd, locale: en-CA, currency: CAD, region: CA-ON, ref_sku: WF90F53ADSA5,
+     url: "https://www.samsung.com/ca/laundry/washing-machines/wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-6-1-cu-ft-gray-wf90f53adsa5/"}
+  - {id: ca-en-qc, label: "CA-EN · Quebec",   driver: pd, locale: en-CA, currency: CAD, region: CA-QC, ref_sku: WF90F53ADSA5,
+     url: "https://www.samsung.com/ca/laundry/washing-machines/wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-6-1-cu-ft-gray-wf90f53adsa5/"}
+  - {id: ca-fr-on, label: "CA-FR · Ontario",  driver: pd, locale: fr-CA, currency: CAD, region: CA-ON, ref_sku: WF90F53ADSA5,
+     url: "https://www.samsung.com/ca_fr/laundry/washing-machines/wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-6-1-cu-ft-gray-wf90f53adsa5/"}
+  - {id: ca-fr-qc, label: "CA-FR · Québec",   driver: pd, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: WF90F53ADSA5,
+     url: "https://www.samsung.com/ca_fr/laundry/washing-machines/wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-6-1-cu-ft-gray-wf90f53adsa5/"}
+  - {id: us,       label: "US",               driver: us_pdp, locale: en-US, currency: USD, ref_sku: WF90F53ADSA5,
+     cookies: {eddzipcode: "10001"},
+     url: "https://www.samsung.com/us/laundry/washers/front-load-wf90f27-front-loading-ai-home-ai-optiwash-plus-ultra-capacity-5-3-cu-ft-dark-steel-sku-wf90f53adsa5/"}
+sections:
+  - {id: color,        label_ko: 색상,             patterns: ["colou?r", "couleur"]}
+  - {id: capacity,     label_ko: 용량,             patterns: ["capacity", "capacité"]}
+  - {id: dimensions,   label_ko: 치수 확인,        patterns: ["^dimensions$", "make sure", "assurez-vous"]}
+  - {id: trade_in,     label_ko: 트레이드업·재활용, patterns: ["recycle your old", "trade-?(in|up)"]}
+  - {id: care,         label_ko: Care+,            patterns: ["care\\+"]}
+  - {id: add_on,       label_ko: 추가 상품,        patterns: ["add-on items", "éléments complémentaires", "complete your laundry"]}
+  - {id: pre_purchase, label_ko: 구매 전 확인,     patterns: ["pre-purchase", "vérification avant"]}
+  - {id: delivery,     label_ko: 배송·설치,        patterns: ["delivery options", "estimate delivery", "frais de livraison"]}
+  - {id: offers,       label_ko: 오퍼,             patterns: ["^offers?$", "offer programs", "programmes d.offres"]}
+  - {id: payment,      label_ko: 결제 방식,        patterns: ["payment options"]}
+  - {id: card_offer,   label_ko: 카드 혜택,        patterns: ["galaxy card"]}
+  - {id: price_bar,    label_ko: 상단 가격 바,     patterns: ["^price bar$"]}
+  - {id: summary,      label_ko: 주문 요약,        patterns: ["^summary$"]}
+key_specs:
+  - {id: capacity,     label_ko: 세탁 용량,        patterns: ["washing capacity", "capacité de lavage", "washer capacity", "^capacity"]}
+  - {id: energy_class, label_ko: 에너지 등급,      patterns: ["energy efficiency class", "classe d.efficacité énergétique", "^tier", "cee"]}
+  - {id: energy_star,  label_ko: ENERGY STAR,      patterns: ["energy star"]}
+  - {id: energy_use,   label_ko: 에너지 소비량,    patterns: ["energy consumption", "consommation d.énergie", "consommation énergétique"]}
+  - {id: spin,         label_ko: 최대 탈수,        patterns: ["^spin speed$", "maximum spin speed", "vitesse d.essorage"]}
+  - {id: dimensions,   label_ko: 치수,             patterns: ["net dimension", "^dimensions", "product dimensions"]}
+  - {id: weight,       label_ko: 무게,             patterns: ["net weight", "poids net", "product weight"]}
+  - {id: noise,        label_ko: 소음(탈수),       patterns: ["noise level", "niveau sonore", "noise", "bruit"]}

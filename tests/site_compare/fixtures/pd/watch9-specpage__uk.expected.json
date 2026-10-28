@@ -1,0 +1,49 @@
+{
+ "options": {
+  "size": [],
+  "connectivity": [],
+  "color": []
+ },
+ "state": {
+  "selection": {},
+  "sku": "SM-L340NZKAEUB",
+  "prices": {
+   "base": "£349.00",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [],
+ "spec_count": 32,
+ "spec_sample": [
+  [
+   "Overview",
+   "NFC",
+   "NFC"
+  ],
+  [
+   "Overview",
+   "Bluetooth Version",
+   "Bluetooth v6.0"
+  ],
+  [
+   "Overview",
+   "Size (Main Display)",
+   "1.3\" (34mm)"
+  ],
+  [
+   "Overview",
+   "Processor",
+   "2.1GHz, 1.95GHz"
+  ],
+  [
+   "Overview",
+   "Body Weight (g)",
+   "31.5"
+  ]
+ ],
+ "offers": [
+  "SM-L340NZKAEUB"
+ ]
+}
