@@ -257,3 +257,26 @@ class LateOptionsDriver(FakePdpDriver):
 def test_discover_reloads_once_when_options_missing(bctx):
     _, leaves, warnings = _leaves(bctx, [AxisSpec("size", iterate=True)], LateOptionsDriver())
     assert len(leaves) == 3, warnings
+
+
+class DroppedClickDriver(FakePdpDriver):
+    """The first click is swallowed (e.g. an overlay or a slow hydration), later clicks work."""
+
+    def __init__(self):
+        super().__init__(direct=False)
+        self.dropped = False
+
+    def choose(self, page, ctx, option):
+        if not self.dropped:
+            self.dropped = True
+            return
+        super().choose(page, ctx, option)
+
+
+def test_click_path_retried_once_on_mismatch(bctx, tmp_path):
+    driver = DroppedClickDriver()
+    product, leaves, _ = _leaves(bctx, [AxisSpec("size", iterate=True)], driver)
+    driver.dropped = False
+    r = _capture(bctx, tmp_path, product, leaves[0], driver)  # 55": first click lost, page stays on 65"
+    assert r.status == "ok" and r.got.sku == "P55B", r.warnings
+    assert any(w.startswith("retried:") for w in r.warnings)

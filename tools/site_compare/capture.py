@@ -277,6 +277,31 @@ def _matches(option: Option, value: str) -> bool:
     return norm_value(value) in (option.value, norm_value(option.label))
 
 
+def _walk_path(page, driver, product: Product, ctx: Context, path: list[Option], wait_ms: int) -> list[str]:
+    """Click the path's options in order; returns the options the site refused."""
+    refused: list[str] = []
+    current = driver.read_state(page, ctx, product).selection
+    for o in path:
+        if _matches(o, current.get(o.axis, "")):
+            continue  # the page already shows this option (e.g. the reference SKU)
+        try:
+            driver.choose(page, ctx, o)
+        except OptionUnavailable as e:
+            refused.append(f"unavailable: {e}")
+        page.wait_for_timeout(wait_ms)
+        current = driver.read_state(page, ctx, product).selection
+    return refused
+
+
+def _off_target(combo: Combo, got: State) -> list[str]:
+    off = []
+    if combo.target_sku and got.sku and norm_value(got.sku) != norm_value(combo.target_sku):
+        off.append(f"sku mismatch: want={combo.target_sku} got={got.sku}")
+    off += [f"selection mismatch: {o.axis} want={o.label} got={got.selection.get(o.axis)}"
+            for o in combo.path if o.axis in got.selection and not _matches(o, got.selection[o.axis])]
+    return off
+
+
 def discover_leaves(browser_context, driver, product: Product, ctx: Context, wait_ms: int) -> tuple[list[Combo], list[str]]:
     """Walk the option tree of the context's axes; one Combo per leaf."""
     axes = [a for a in context_axes(product, ctx) if a.iterate or a.fixed]
@@ -346,24 +371,19 @@ def capture_leaf(browser_context, driver, product: Product, ctx: Context, combo:
     try:
         page, prep = _open(browser_context, driver, ctx, url or ctx.url, wait_ms)
         warnings += prep
-        refused: list[str] = []
-        if not url and combo.path:
-            current = driver.read_state(page, ctx, product).selection
-            for o in combo.path:
-                if _matches(o, current.get(o.axis, "")):
-                    continue  # the page already shows this option (e.g. the reference SKU)
-                try:
-                    driver.choose(page, ctx, o)
-                except OptionUnavailable as e:
-                    refused.append(f"unavailable: {e}")
-                page.wait_for_timeout(wait_ms)
-                current = driver.read_state(page, ctx, product).selection
+        clicking = not url and bool(combo.path)
+        refused = _walk_path(page, driver, product, ctx, combo.path, wait_ms) if clicking else []
         got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings, reload_ok=True)
-        off = []
-        if combo.target_sku and got.sku and norm_value(got.sku) != norm_value(combo.target_sku):
-            off.append(f"sku mismatch: want={combo.target_sku} got={got.sku}")
-        off += [f"selection mismatch: {o.axis} want={o.label} got={got.selection.get(o.axis)}"
-                for o in combo.path if o.axis in got.selection and not _matches(o, got.selection[o.axis])]
+        off = _off_target(combo, got)
+        if off and clicking and not refused and got.available is not False:
+            # a click can be swallowed (overlay, late hydration): walk the path once more on a fresh page
+            warnings.append(f"retried: {'; '.join(off)}")
+            page.close()
+            page = None
+            page, _ = _open(browser_context, driver, ctx, ctx.url, wait_ms)
+            refused = _walk_path(page, driver, product, ctx, combo.path, wait_ms)
+            got = _read_state_with_retry(page, driver, product, ctx, wait_ms, warnings, reload_ok=True)
+            off = _off_target(combo, got)
         if got.available is False:
             status = "unavailable"
             warnings.append("not available: the page says this product cannot be bought")
@@ -486,13 +506,20 @@ def capture_discover_context(browser, driver, product: Product, ctx: Context, ru
     return results, len(leaves)
 
 
-def run_capture(product: Product, out_root: Path, only: set[str] | None, headed: bool, wait_ms: int) -> Path:
+def run_capture(product: Product, out_root: Path, only: set[str] | None, headed: bool, wait_ms: int,
+                into: Path | None = None) -> Path:
+    """Capture into a new run dir, or with `into` recapture `only`'s contexts in an existing run (others kept)."""
     started = now_kst()
-    run_dir = Path(out_root) / product.id / started.strftime("%Y%m%d-%H%M%S")
+    run_dir = Path(into) if into else Path(out_root) / product.id / started.strftime("%Y%m%d-%H%M%S")
     (run_dir / "shots").mkdir(parents=True, exist_ok=True)
     combos = expand_combos(product) if product.mode == "click" else []
-    run = RunData(product.id, product.title, run_dir.name, started.isoformat(timespec="seconds"),
-                  [VIEWPORT["width"], VIEWPORT["height"]], wait_ms, product.contexts, [])
+    if into:
+        run = RunData.from_json(run_dir / "data.json")
+        run.contexts = product.contexts
+    else:
+        run = RunData(product.id, product.title, run_dir.name, started.isoformat(timespec="seconds"),
+                      [VIEWPORT["width"], VIEWPORT["height"]], wait_ms, product.contexts, [])
+    order = {c.id: i for i, c in enumerate(product.contexts)}
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome", headless=not headed)
         for ctx in product.contexts:
@@ -502,11 +529,12 @@ def run_capture(product: Product, out_root: Path, only: set[str] | None, headed:
             driver = get_driver(ctx.driver)
             if product.mode == "click":
                 mine = [c for c in combos if c.context_id == ctx.id]
-                run.results += capture_context(browser, driver, product, ctx, mine, run_dir, wait_ms)
+                results = capture_context(browser, driver, product, ctx, mine, run_dir, wait_ms)
             else:
                 results, n = capture_discover_context(browser, driver, product, ctx, run_dir, wait_ms)
-                run.results += results
                 run.discovered[ctx.id] = n
+            run.results = [r for r in run.results if r.context_id != ctx.id] + results
+            run.results.sort(key=lambda r: order.get(r.context_id, len(order)))  # stable: combo order kept
             run.to_json(run_dir / "data.json")
         browser.close()
     run.to_json(run_dir / "data.json")

@@ -134,3 +134,17 @@ def test_fold8_rebuild_from_legacy_run(tmp_path):
                              " panels: [{combo: uk__256gb, section: storage}]}\n")
     html = build_report(d, product, cards).read_text(encoding="utf-8")
     assert "256GB" in html and 'id="key-specs"' not in html  # Fold8 has no key_specs
+
+
+def test_build_remaps_section_titles_with_current_rules(tmp_path):
+    r = _res(UK, "77", "£1.00", ref=True)
+    r.sections = [Shot("Acheter Directement. Obtenez Plus.", None, 1, "shots/uk__77__01.png", 10, 10,
+                       [TextBox("Livraison gratuite", 1, 1, 5, 5)])]
+    d = _run_dir(tmp_path, [r])
+    rules = SECTIONS + [SectionRule("buy_direct", "직접 구매 혜택", ["acheter directement"])]
+    product = Product("demo", "Demo", [UK, UKF, US], sections=rules, mode="discover", key_specs=KEY)
+    cards = _cards(tmp_path, "cards:\n  - {id: c, title: t, tags: [국가별 구성 차이], observation: o, note: n,"
+                             " panels: [{combo: uk__77, section: buy_direct, highlight: [Livraison gratuite]}]}\n")
+    html = build_report(d, product, cards).read_text(encoding="utf-8")
+    assert "section not found" not in html and "highlight not found" not in html
+    assert '<th scope="row">직접 구매 혜택</th>' in html  # menu table row uses the rule's label

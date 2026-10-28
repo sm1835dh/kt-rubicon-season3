@@ -33,7 +33,7 @@ sections:
   - {id: trade_in,        label_ko: 트레이드인,      patterns: ["trade-?in", "try trading in", "échange"]}
   - {id: care,            label_ko: Care+,           patterns: ["care\\+"]}
   - {id: offers,          label_ko: 오퍼·사은품,     patterns: ["^offers?$", "gifts? and savings", "^offre", "cadeaux et économies"]}
-  - {id: buy_direct,      label_ko: 직접 구매 혜택,  patterns: ["buy direct", "achetez directement"]}
+  - {id: buy_direct,      label_ko: 직접 구매 혜택,  patterns: ["buy direct", "achetez directement", "acheter directement"]}
   - {id: discover_more,   label_ko: 더 보기,         patterns: ["discover more"]}
   - {id: bundle,          label_ko: 번들 할인,       patterns: ["enhance your experience", "bundle savings"]}
   - {id: purchase_option, label_ko: 결제 방식,       patterns: ["purchase option", "^one-time payment$"]}
@@ -49,5 +49,5 @@ key_specs:
   - {id: screen,          label_ko: 화면 크기,       patterns: ["^size \\(inch\\)", "^size$", "^taille$", "screen size"]}
   - {id: resolution,      label_ko: 해상도,          patterns: ["^resolution", "^résolution"]}
   - {id: weight,          label_ko: 무게,            patterns: ["^weight", "^poids"]}
-  - {id: battery,         label_ko: 배터리,          patterns: ["battery capacity", "^battery", "batterie"]}
+  - {id: battery,         label_ko: 배터리,          patterns: ["battery capacity", "capacité de la batterie"]}
   - {id: os,              label_ko: 운영체제,        patterns: ["operating system", "système d.exploitation", "^os$"]}

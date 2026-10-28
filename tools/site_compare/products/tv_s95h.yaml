@@ -35,7 +35,7 @@ key_specs:
   - {id: refresh_rate, label_ko: 주사율,           patterns: ["refresh rate", "taux de rafraîchissement", "fréquence de rafraîchissement"]}
   - {id: energy_class, label_ko: 에너지 등급,      patterns: ["energy efficiency class", "energy star"]}
   - {id: power_max,    label_ko: 소비전력(최대),   patterns: ["power consumption \\(max", "consommation.*max", "maximum power"]}
-  - {id: power_typ,    label_ko: 소비전력(일반),   patterns: ["power consumption \\(typical", "typical power", "consommation.*typique"]}
-  - {id: dims_stand,   label_ko: 치수(스탠드 포함), patterns: ["set dimension with stand", "dimensions? .*avec (le )?support", "dimensions with stand"]}
+  - {id: power_typ,    label_ko: 소비전력(일반),   patterns: ["power consumption \\(typical", "typical power", "consommation.*(typique|normale)"]}
+  - {id: dims_stand,   label_ko: 치수(스탠드 포함), patterns: ["set (size|dimension) with stand", "(dimensions?|taille) .*avec (le )?support", "dimensions with stand"]}
   - {id: weight,       label_ko: 무게(스탠드 제외), patterns: ["set weight without stand", "poids .*sans (le )?support", "weight without stand"]}
   - {id: power_supply, label_ko: 전원,             patterns: ["^power supply", "^alimentation"]}

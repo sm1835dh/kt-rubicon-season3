@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> None:
     c.add_argument("--only", help="comma-separated context ids")
     c.add_argument("--headed", action="store_true", help="show the browser (use when bot-blocked)")
     c.add_argument("--wait-ms", type=int, default=5000)
+    c.add_argument("--into", help="recapture --only's contexts inside this run (run id or latest), keeping the rest")
     b = sub.add_parser("build", help="rebuild report.html from a captured run")
     b.add_argument("product")
     b.add_argument("--run", default="latest")
@@ -52,7 +53,8 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "capture":
         from .capture import run_capture
         only = set(args.only.split(",")) if args.only else None
-        run_dir = run_capture(product, OUT_ROOT, only, args.headed, args.wait_ms)
+        into = _resolve_run(product.id, args.into) if args.into else None
+        run_dir = run_capture(product, OUT_ROOT, only, args.headed, args.wait_ms, into=into)
         print(f"data: {(run_dir / 'data.json').resolve()}")
         _build(product, run_dir)
     elif args.cmd == "snapshot":

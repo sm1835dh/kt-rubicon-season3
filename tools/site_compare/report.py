@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from .config import map_section
 from .model import ComboResult, Product, RunData, Shot
 
 TAGS = ("국가별 구성 차이", "사이트 데이터 오류", "소스 vs 화면 불일치", "CA-FR 번역")
@@ -242,6 +243,9 @@ def _menu_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
 def build_report(run_dir: Path, product: Product, cards_path: Path) -> Path:
     run_dir = Path(run_dir)
     run = RunData.from_json(run_dir / "data.json")
+    for r in run.results:  # section patterns added to the yaml after capture apply on rebuild
+        for s in r.sections:
+            s.section_id = map_section(s.title, product.sections)
     cols = _columns(run, product)
     cards = []
     for card in load_cards(cards_path):
