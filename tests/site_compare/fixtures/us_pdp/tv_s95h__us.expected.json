@@ -1,0 +1,83 @@
+{
+ "options": {
+  "size": [
+   [
+    "55",
+    "55\"",
+    "QN55S95HAFXZA",
+    true
+   ],
+   [
+    "65",
+    "65\"",
+    "QN65S95HAFXZA",
+    true
+   ],
+   [
+    "77",
+    "77\"",
+    "QN77S95HAFXZA",
+    true
+   ],
+   [
+    "83",
+    "83\"",
+    "QN83S95HAEXZA",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "size": "77\"",
+   "model": "oled s95h 4k"
+  },
+  "sku": "QN77S95HAFXZA",
+  "prices": {
+   "base": "$3,699.99",
+   "monthly": "$154.18",
+   "was": "$4,499.99"
+  },
+  "available": true
+ },
+ "sections": [
+  "Model",
+  "Select a size",
+  "Offers",
+  "Samsung care+",
+  "Delivery options for:",
+  "Enhance your experience",
+  "Payment options"
+ ],
+ "spec_count": 139,
+ "spec_sample": [
+  [
+   "Product Type",
+   "Product Type",
+   "OLED"
+  ],
+  [
+   "Series",
+   "Series",
+   "9"
+  ],
+  [
+   "Display",
+   "Screen Size",
+   "77\""
+  ],
+  [
+   "Display",
+   "Real Inch",
+   "76.8\""
+  ],
+  [
+   "Display",
+   "Resolution",
+   "3840 x 2160"
+  ]
+ ],
+ "offers": [
+  "QN77S95HAFXZA"
+ ]
+}

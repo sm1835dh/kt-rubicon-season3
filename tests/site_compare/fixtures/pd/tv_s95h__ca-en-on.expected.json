@@ -1,0 +1,81 @@
+{
+ "options": {
+  "size": [
+   [
+    "55",
+    "55\"",
+    "QN55S95HAFXZC",
+    true
+   ],
+   [
+    "65",
+    "65\"",
+    "QN65S95HAFXZC",
+    true
+   ],
+   [
+    "77",
+    "77\"",
+    "QN77S95HAFXZC",
+    true
+   ],
+   [
+    "83",
+    "83\"",
+    "QN83S95HAEXZC",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "size": "77\""
+  },
+  "sku": "QN77S95HAFXZC",
+  "prices": {
+   "base": "$4,499.99",
+   "monthly": "$187.50",
+   "was": "$5,999.99"
+  },
+  "available": true
+ },
+ "sections": [
+  "Choose your size",
+  "Samsung Care+",
+  "Personalize your TV",
+  "Add-on Items",
+  "Pre-purchase check",
+  "Offers"
+ ],
+ "spec_count": 130,
+ "spec_sample": [
+  [
+   "Display",
+   "Screen Size",
+   "77\""
+  ],
+  [
+   "Display",
+   "Resolution",
+   "3840 x 2160"
+  ],
+  [
+   "Display",
+   "Refresh Rate",
+   "165 Hz (VRR Support)"
+  ],
+  [
+   "Display",
+   "Anti Reflection",
+   "Glare Free"
+  ],
+  [
+   "Video",
+   "Picture Engine",
+   "NQ4 AI Gen3 Processor"
+  ]
+ ],
+ "offers": [
+  "QN77S95HAFXZC"
+ ]
+}

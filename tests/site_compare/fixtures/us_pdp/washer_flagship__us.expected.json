@@ -1,0 +1,68 @@
+{
+ "options": {
+  "color": [
+   [
+    "darksteel",
+    "Dark Steel",
+    "WF90F53ADSA5",
+    true
+   ],
+   [
+    "ivory",
+    "Ivory",
+    "WF90F53ADYA5",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Dark Steel"
+  },
+  "sku": "WF90F53ADSA5",
+  "prices": {
+   "base": "$1,299.00",
+   "monthly": "$54.13",
+   "was": "$1,678.99"
+  },
+  "available": true
+ },
+ "sections": [
+  "Color",
+  "Offers",
+  "Samsung care+",
+  "Delivery options for:",
+  "Payment options"
+ ],
+ "spec_count": 146,
+ "spec_sample": [
+  [
+   "Design",
+   "Body color",
+   "Dark Steel"
+  ],
+  [
+   "Performance",
+   "Energy Efficiency Class",
+   "Tier 3 (Advanced Tier)"
+  ],
+  [
+   "Performance",
+   "IMEF",
+   "3.1"
+  ],
+  [
+   "Performance",
+   "IWF",
+   "2.9"
+  ],
+  [
+   "Feature",
+   "AI Bubble",
+   "Yes"
+  ]
+ ],
+ "offers": [
+  "WF90F53ADSA5"
+ ]
+}

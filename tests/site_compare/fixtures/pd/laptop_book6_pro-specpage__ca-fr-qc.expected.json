@@ -1,0 +1,45 @@
+{
+ "options": {},
+ "state": {
+  "selection": {},
+  "sku": "NP960XJG-KG1CA",
+  "prices": {
+   "base": "3 299,99 $",
+   "monthly": null,
+   "was": "Prix d'origine: 3 599,99 $"
+  },
+  "available": true
+ },
+ "sections": [],
+ "spec_count": 38,
+ "spec_sample": [
+  [
+   "Processeur/jeu de puces",
+   "CPU",
+   "Intel® Core™ Ultra 7 processor 356H"
+  ],
+  [
+   "Processeur/jeu de puces",
+   "GPU",
+   "Intel® Graphics"
+  ],
+  [
+   "Processeur/jeu de puces",
+   "Type de GPU",
+   "Shared"
+  ],
+  [
+   "Processeur/jeu de puces",
+   "NPU",
+   "Intel® NPU"
+  ],
+  [
+   "Écran",
+   "Taille",
+   "16.0\""
+  ]
+ ],
+ "offers": [
+  "NP960XJG-KG1CA"
+ ]
+}
