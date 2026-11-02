@@ -14,6 +14,22 @@ uv pip install --python .venv/bin/python -r requirements.txt
 
 브라우저는 PC에 설치된 Google Chrome을 사용합니다(`channel="chrome"`). 따라서 `playwright install`은 필요 없습니다.
 
+## 폐쇄망 반입 (`run.sh`)
+
+`capture`는 samsung.com(UK·CA·US)에 실제로 접속하므로, 폐쇄망에서도 이 사이트들이 열려야 합니다. `build`는 오프라인에서도 됩니다.
+
+```bash
+# 인터넷 되는 PC: 패키지를 tools/site_compare/wheels/에 받은 뒤 저장소 폴더째 옮김
+tools/site_compare/run.sh download          # 이 PC와 같은 OS·Python
+tools/site_compare/run.sh download linux    # 폐쇄망이 리눅스 x86_64 (PYVER=3.12 기본)
+
+# 폐쇄망 PC (Python 3.10+, Google Chrome 필요)
+tools/site_compare/run.sh install           # wheels/로 오프라인 설치 → .venv
+tools/site_compare/run.sh check             # Chrome 실행 + samsung.com 접속 확인
+tools/site_compare/run.sh capture tv_s95h --only uk,us
+tools/site_compare/run.sh all               # 모든 상품 차례로 캡쳐
+```
+
 ## 실행
 
 저장소 루트에서 실행합니다.
