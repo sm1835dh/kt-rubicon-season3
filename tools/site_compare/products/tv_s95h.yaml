@@ -1,0 +1,41 @@
+id: tv_s95h
+title: Samsung OLED S95H (77" 기준)
+axes: [{name: size, iterate: true}]
+contexts:
+  - {id: uk,       label: "UK",              driver: pd, locale: en-GB, currency: GBP, ref_sku: QE77S95HFTXXU,
+     url: "https://www.samsung.com/uk/tvs/oled-tv/s95h-77-inch-4k-smart-tv-qe77s95hftxxu/"}
+  - {id: ca-en-on, label: "CA-EN · Ontario", driver: pd, locale: en-CA, currency: CAD, region: CA-ON, ref_sku: QN77S95HAFXZC,
+     url: "https://www.samsung.com/ca/tvs/oled-tv/s95ha-77-inch-4k-smart-tv-qn77s95hafxzc/"}
+  - {id: ca-en-qc, label: "CA-EN · Quebec",  driver: pd, locale: en-CA, currency: CAD, region: CA-QC, ref_sku: QN77S95HAFXZC,
+     url: "https://www.samsung.com/ca/tvs/oled-tv/s95ha-77-inch-4k-smart-tv-qn77s95hafxzc/"}
+  - {id: ca-fr-on, label: "CA-FR · Ontario", driver: pd, locale: fr-CA, currency: CAD, region: CA-ON, ref_sku: QN77S95HAFXZC,
+     url: "https://www.samsung.com/ca_fr/tvs/oled-tv/s95h-77-inch-4k-smart-tv-qn77s95hafxzc/"}
+  - {id: ca-fr-qc, label: "CA-FR · Québec",  driver: pd, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: QN77S95HAFXZC,
+     url: "https://www.samsung.com/ca_fr/tvs/oled-tv/s95h-77-inch-4k-smart-tv-qn77s95hafxzc/"}
+  - {id: us,       label: "US",              driver: us_pdp, locale: en-US, currency: USD, ref_sku: QN77S95HAFXZA,
+     cookies: {eddzipcode: "10001"},
+     url: "https://www.samsung.com/us/tvs/oled-tv/77-inch-oled-4k-tv-s95h-sku-qn77s95hafxza/"}
+sections:   # 순서 = 우선순위
+  - {id: size,         label_ko: 크기,             patterns: ["choose your size", "choisissez votre taille", "select a size", "^size$"]}
+  - {id: model,        label_ko: 모델(시리즈),     patterns: ["^model$"]}
+  - {id: trade_in,     label_ko: 트레이드인,       patterns: ["recycle your old", "trade-?(in|up)"]}
+  - {id: care,         label_ko: Care+,            patterns: ["care\\+"]}
+  - {id: personalize,  label_ko: 맞춤 설정,        patterns: ["personali[sz]e your tv", "personnalisez"]}
+  - {id: add_on,       label_ko: 추가 상품,        patterns: ["add-on items", "éléments complémentaires", "enhance your experience"]}
+  - {id: pre_purchase, label_ko: 구매 전 확인,     patterns: ["pre-purchase", "vérification avant"]}
+  - {id: delivery,     label_ko: 배송·설치,        patterns: ["delivery options", "estimate delivery", "frais de livraison"]}
+  - {id: offers,       label_ko: 오퍼,             patterns: ["^offers?$", "offer programs", "programmes d.offres"]}
+  - {id: payment,      label_ko: 결제 방식,        patterns: ["payment options"]}
+  - {id: card_offer,   label_ko: 카드 혜택,        patterns: ["galaxy card"]}
+  - {id: price_bar,    label_ko: 상단 가격 바,     patterns: ["^price bar$"]}
+  - {id: summary,      label_ko: 주문 요약,        patterns: ["^summary$"]}
+key_specs:
+  - {id: screen_size,  label_ko: 화면 크기,        patterns: ["^screen size", "^taille de l.écran", "^size$"]}
+  - {id: resolution,   label_ko: 해상도,           patterns: ["^resolution$", "^résolution$"]}
+  - {id: refresh_rate, label_ko: 주사율,           patterns: ["refresh rate", "taux de rafraîchissement", "fréquence de rafraîchissement"]}
+  - {id: energy_class, label_ko: 에너지 등급,      patterns: ["energy efficiency class", "energy star"]}
+  - {id: power_max,    label_ko: 소비전력(최대),   patterns: ["power consumption \\(max", "consommation.*max", "maximum power"]}
+  - {id: power_typ,    label_ko: 소비전력(일반),   patterns: ["power consumption \\(typical", "typical power", "consommation.*(typique|normale)"]}
+  - {id: dims_stand,   label_ko: 치수(스탠드 포함), patterns: ["set (size|dimension) with stand", "(dimensions?|taille) .*avec (le )?support", "dimensions with stand"]}
+  - {id: weight,       label_ko: 무게(스탠드 제외), patterns: ["set weight without stand", "poids .*sans (le )?support", "weight without stand"]}
+  - {id: power_supply, label_ko: 전원,             patterns: ["^power supply", "^alimentation"]}

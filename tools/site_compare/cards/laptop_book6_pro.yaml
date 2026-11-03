@@ -1,0 +1,121 @@
+# Galaxy Book6 Pro 16" 차이점 카드. combo/section은 data.json 기준, highlight는 화면 텍스트(포함 여부로 찾음).
+# 동일 모델 아님: CA에는 Ultra X7 358H 구성이 없어 Ultra 7 356H(NP960XJG-KG1CA)와 비교합니다.
+cards:
+  - id: ca-processor-variant
+    title: CA는 Ultra X7 구성이 없어 프로세서·그래픽이 다름 (동일 모델 아님)
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__ref, section: processor, highlight: ["Intel® Core™ Ultra 7 processor 356H", "Intel® Core™ Ultra X7 processor 358H"], caption: UK}
+      - {combo: ca-en-on__ref, section: processor, highlight: ["Intel® Core™ Ultra 7 processor 356H"], caption: CA-EN}
+      - {combo: us__ref, section: processor, highlight: ["Intel® Core™ Ultra X7 358H", "Intel® Core™ Ultra 7 356H"], caption: US}
+      - {combo: ca-en-on__ref, section: graphic, highlight: ["Intel®Graphics"], caption: CA-EN 그래픽}
+    observation: |
+      [사실] UK·US는 프로세서로 Ultra 7 356H와 Ultra X7 358H를 고를 수 있습니다. CA는 Ultra 7 356H 하나뿐이고, 그래픽도 Intel®Graphics 하나뿐입니다.
+      [사실] 그래서 32GB·1TB 기준 구성이 UK NP960XJG-KGAUK(X7 358H, Arc B390), US NP960XJG-KG1US(X7 358H, Arc B390), CA NP960XJG-KG1CA(Ultra 7 356H, Intel Graphics)로 다릅니다.
+      [사실] US와 CA는 접미사 "KG1"이 같은데 프로세서가 다릅니다.
+    note: |
+      동일 모델 아님. 국가 간 가격을 비교할 때는 프로세서·그래픽까지 같은 구성끼리만 비교합니다.
+      SKU 접미사(KG1 등)로 구성을 추정하지 않습니다. 구성 속성(cpu, gpu, memory, storage)은 구매 페이지 선택값이나 스펙에서 읽습니다.
+
+  - id: uk-charger-mismatch
+    title: UK 노트북 충전기 포함 여부가 화면 안에서 서로 다름
+    tags: [사이트 데이터 오류]
+    panels:
+      - {combo: uk__ref, section: graphic, highlight: ["To reduce waste, our laptops do not come with chargers"], caption: 그래픽 선택 아래 안내}
+      - {combo: uk__ref, section: summary, highlight: ["Charger included", "2. C to C Cable"], caption: 주문 요약}
+      - {combo: ca-en-on__ref, section: summary, highlight: ["3. Compact Charger"], caption: CA-EN 주문 요약}
+    observation: |
+      [사실] UK 그래픽 선택 아래에 "To reduce waste, our laptops do not come with chargers. Save 30% when you buy together."와 충전기 2종(60W £34.30, 140W £76.30) 추가 구매가 있습니다.
+      [사실] UK "What's in the box"도 "1. Galaxy Book6 Pro | 2. C to C Cable"뿐입니다.
+      [사실] 그런데 주문 요약의 EU 공용 충전기 그림 표시 대체 텍스트는 "Charger included", "Charger 60-65w Usb Pd"입니다. 그림에도 '미포함'을 뜻하는 사선이 보이지 않습니다.
+      [사실] CA 구성품에는 "3. Compact Charger"가 있습니다.
+    note: |
+      충전기 포함 여부(charger_included)는 국가별 속성입니다. UK는 미포함(별도 구매 할인), CA는 포함입니다.
+      값은 구성품 목록(What's in the box)을 1순위로 씁니다. 그림 표시의 대체 텍스트는 쓰지 않습니다.
+
+  - id: uk-tile-price-inversion
+    title: UK 프로세서·그래픽 선택지 가격이 상위 구성보다 높게 표시됨
+    tags: [사이트 데이터 오류]
+    panels:
+      - {combo: uk__ref, section: processor, highlight: ["£69.42/mo. or £2,499.00", "£63.87/mo. or £2,299.00"], caption: UK 프로세서}
+      - {combo: uk__ref, section: graphic, highlight: ["£72.20/mo. or £2,599.00"], caption: UK 그래픽}
+      - {combo: us__ref, section: processor, highlight: ["$2,049.99", "$2,149.99"], caption: US 프로세서}
+    observation: |
+      [사실] UK에서 하위 프로세서 Ultra 7 356H 선택지는 £2,499.00, 상위 Ultra X7 358H는 £2,299.00입니다. 그래픽도 Intel®Graphics £2,599.00, Arc™ B390 £2,299.00입니다.
+      [사실] US는 Ultra 7 356H $2,049.99, Ultra X7 358H $2,149.99로 상위 구성이 더 비쌉니다.
+      [사실] 페이지의 선택지 데이터(data-modelcode·data-modelprice)를 보면 세 타일이 서로 다른 SKU를 가리킵니다. 356H → NP960XJG-KG6UK(기본 모델 NP960XJGE-EXP, 2499), Intel®Graphics → NP960XJG-KGJUK(기본 모델 NP960XJGD-EXP, 2599), X7 358H·Arc B390 → NP960XJG-KGAUK(NP960XJGD-EXP, 2299)입니다.
+      [추정] KGJUK는 X7 기본 모델(D)에 Intel Graphics를 붙인 구성이라 다른 나라에 없는 조합입니다. 하위 구성이 더 비싼 것과 함께 UK 구성 데이터 오류일 가능성이 큽니다.
+    note: |
+      선택지 타일에 표시된 가격은 SKU 가격으로 쓰지 않습니다. 가격은 SKU를 선택한 뒤의 상단 가격 바·요약에서 읽습니다.
+      UK 노트북은 구성 축(cpu, gpu)별 SKU 매핑을 data-modelcode로 확인하고, 다른 국가의 유효 조합과 맞지 않으면 검수 대상으로 표시합니다.
+
+  - id: financing-format
+    title: 상단 가격 바의 할부 표기와 할부 기간
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__ref, section: price_bar, highlight: ["£63.87/mo. or £2,299.00"], caption: UK}
+      - {combo: ca-en-on__ref, section: price_bar, highlight: ["From $275.00/mo. with 0% APR‡ or $3,299.99"], caption: CA-EN Ontario}
+      - {combo: ca-en-qc__ref, section: price_bar, highlight: ["From Total $3,299.99"], caption: CA-EN Quebec}
+      - {combo: us__ref, section: price_bar, highlight: ["$2,149.99 or $89.59/mo"], caption: US}
+    observation: |
+      [사실] UK·CA는 "월 할부 or 일시불", US는 "일시불 or 월 할부" 순서입니다.
+      [사실] 할부 기간이 다릅니다. UK "36 month installments at 0% APR", CA "12 month installments at 0% APR", US "for 24 mos at 0% APR"입니다. 그래서 월 금액 £63.87 / $275.00 / $89.59는 서로 비교할 수 없습니다.
+      [사실] Quebec는 월 할부가 빠지고 "From Total $3,299.99"라는 어색한 문구가 남습니다(CA-FR: "À partir de total 3 299,99 $").
+    note: |
+      financing_monthly는 반드시 financing_term(개월)·APR과 함께 저장합니다. 월 금액만 단독으로 쓰지 않습니다.
+      Quebec의 "From Total" 문구는 파서에서 접두어로 처리합니다. 할부 금액으로 읽으면 안 됩니다.
+
+  - id: storage-and-price-match
+    title: CA에만 512GB 선택지와 최저가 보상 안내가 있음
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__ref, section: storage, highlight: ["1TB"], caption: UK}
+      - {combo: ca-en-on__ref, section: storage, highlight: ["512 GB", "Found a better price?"], caption: CA-EN}
+      - {combo: us__ref, section: storage, highlight: ["1 TB"], caption: US}
+    observation: |
+      [사실] 이 구성(32GB)의 저장 용량 선택지는 UK·US가 1TB 하나이고, CA는 512 GB($3,149.99)·1 TB($3,299.99) 두 개입니다.
+      [사실] CA는 저장 용량 아래에 "Found a better price? … we'll match it" 최저가 보상 안내가 있습니다.
+      [사실] 용량 표기는 UK "32GB/1TB"(붙여 씀), CA·US "32 GB/1 TB"(띄어 씀)입니다.
+    note: |
+      용량 값은 숫자+단위로 정규화합니다(32GB = 32 GB). 선택지 목록은 국가·구성마다 다르니 고정 목록으로 두지 않습니다.
+      CA 최저가 보상(price match)은 정책 정보로 따로 수집합니다.
+
+  - id: trade-in
+    title: 트레이드인 안내 방식
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__ref, section: trade_in, highlight: ["Get an extra £200 off Galaxy Book6 Pro with code EXTRATRADE8", "Discount from £5.00 to £460.00"], caption: UK}
+      - {combo: ca-en-on__ref, section: trade_in, highlight: ["Get an instant discount for trading in your current device."], caption: CA-EN}
+      - {combo: us__ref, section: trade_in, highlight: ["Samsung trade-in value up to $337.", "Get $500 Samsung Instant Savings"], caption: US}
+    observation: |
+      [사실] UK는 트레이드인 할인 범위(£5.00~£460.00)와 추가 £200 할인 코드 "EXTRATRADE8"을 보여 줍니다.
+      [사실] CA는 금액 없이 "Get an instant discount…"만 있습니다. US는 "up to $337"과 별도의 "$500 Samsung Instant Savings"를 보여 줍니다.
+    note: |
+      trade_in은 {min, max, currency, promo_code, extra_discount}로 둡니다. CA처럼 금액이 없으면 null로 두고, 0으로 채우지 않습니다.
+      US Instant Savings($500)는 트레이드인이 아니라 즉시 할인입니다. 가격 계산(was $2,649.99 → $2,149.99)에 이미 반영돼 있습니다.
+
+  - id: care-plus
+    title: Samsung Care+ 가격 구조
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__ref, section: care, highlight: ["£0.00 for 3 months then £14.99/mo"], caption: UK}
+      - {combo: ca-en-on__ref, section: care, highlight: ["From $13.00/month or $249.00"], caption: CA-EN}
+      - {combo: us__ref, section: care, highlight: ["$149.00/2 Yr. Term"], caption: US}
+    observation: |
+      [사실] UK는 3개월 무료 후 월 £14.99, CA는 월 $13.00 또는 일시불 $249.00, US는 2년 $149.00입니다.
+      [사실] 보장 문구도 다릅니다. UK "Unlimited Samsung certified repairs, Worldwide cover for damage", CA "Accidental damage: Unlimited service requests", US "Unlimited repairs for drops, spills, and mechanical breakdowns"입니다.
+    note: |
+      Care+는 {billing: monthly|term|both, price, term_months, free_months}로 정규화합니다. 월 요금과 기간 요금을 한 필드에 섞지 않습니다.
+
+  - id: us-dual-model-code
+    title: US는 모델 코드를 "기본 모델 / SKU" 두 개로 표시
+    tags: [국가별 구성 차이]
+    panels:
+      - {combo: uk__ref, section: summary, highlight: ["NP960XJG-KGAUK"], caption: UK}
+      - {combo: ca-en-on__ref, section: summary, highlight: ["NP960XJG-KG1CA"], caption: CA-EN}
+      - {combo: us__ref, section: summary, highlight: ["NP960XJGD-EXP / NP960XJG-KG1US"], caption: US}
+    observation: |
+      [사실] UK·CA 요약은 SKU 하나(NP960XJG-KGAUK, NP960XJG-KG1CA)만 보여 줍니다. US는 "NP960XJGD-EXP / NP960XJG-KG1US"처럼 두 개를 슬래시로 이어 보여 줍니다.
+      [사실] US TV도 같은 형식입니다("QN77S95HAF / QN77S95HAFXZA").
+    note: |
+      US 모델 코드는 " / "로 나눠 뒤쪽(국가 접미사가 붙은 SKU)을 sku로, 앞쪽을 base_model로 저장합니다.

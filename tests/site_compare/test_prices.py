@@ -66,3 +66,11 @@ def test_price_matches():
     assert price_matches(Money(1899.99, "CAD"), Offer("X", 1899.99, "USD", None)) is False
     assert price_matches(None, Offer("X", 1.0, "USD", None)) is None
     assert price_matches(Money(1.0, "USD"), None) is None
+
+
+def test_money_tokens_bare_monthly():
+    text = "$379.99 or 15.83/mo for 24 mos at 0% APR"
+    assert money_tokens(text, "en-US") == ["$379.99"]
+    assert money_tokens(text, "en-US", bare_monthly=True) == ["$379.99", "$15.83"]
+    assert money_tokens("Pay Monthly $54.13/mo for 24 mos", "en-US", bare_monthly=True) == ["$54.13"]
+    assert money_tokens("or 102.09/mo", "en-GB", bare_monthly=True) == ["£102.09"]

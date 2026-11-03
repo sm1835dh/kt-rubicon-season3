@@ -1,0 +1,53 @@
+id: watch9
+title: Galaxy Watch9 (40mm Graphite Bluetooth 기준)
+axes:
+  - {name: size, iterate: true}
+  - {name: connectivity, iterate: true}
+  - {name: color, fixed: Graphite}
+contexts:
+  - {id: uk,       label: "UK",              driver: watchbc, locale: en-GB, currency: GBP, ref_sku: SM-L340NZKAEUB,
+     url: "https://www.samsung.com/uk/watches/galaxy-watch9/buy/",
+     spec_url: "https://www.samsung.com/uk/watches/galaxy-watch/galaxy-watch9-40mm-graphite-bluetooth-sm-l340nzkaeub/"}
+  - {id: ca-en-on, label: "CA-EN · Ontario", driver: watchbc, locale: en-CA, currency: CAD, region: CA-ON, ref_sku: SM-L340NZKAXAC,
+     url: "https://www.samsung.com/ca/watches/galaxy-watch9/buy/",
+     spec_url: "https://www.samsung.com/ca/watches/galaxy-watch/galaxy-watch9-40mm-graphite-bluetooth-sm-l340nzkaxac/"}
+  - {id: ca-en-qc, label: "CA-EN · Quebec",  driver: watchbc, locale: en-CA, currency: CAD, region: CA-QC, ref_sku: SM-L340NZKAXAC,
+     url: "https://www.samsung.com/ca/watches/galaxy-watch9/buy/",
+     spec_url: "https://www.samsung.com/ca/watches/galaxy-watch/galaxy-watch9-40mm-graphite-bluetooth-sm-l340nzkaxac/"}
+  - {id: ca-fr-on, label: "CA-FR · Ontario", driver: watchbc, locale: fr-CA, currency: CAD, region: CA-ON, ref_sku: SM-L340NZKAXAC,
+     url: "https://www.samsung.com/ca_fr/watches/galaxy-watch9/buy/",
+     spec_url: "https://www.samsung.com/ca_fr/watches/galaxy-watch/galaxy-watch9-40mm-graphite-bluetooth-sm-l340nzkaxac/"}
+  - {id: ca-fr-qc, label: "CA-FR · Québec",  driver: watchbc, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: SM-L340NZKAXAC,
+     url: "https://www.samsung.com/ca_fr/watches/galaxy-watch9/buy/",
+     spec_url: "https://www.samsung.com/ca_fr/watches/galaxy-watch/galaxy-watch9-40mm-graphite-bluetooth-sm-l340nzkaxac/"}
+  - {id: us,       label: "US",              driver: us, locale: en-US, currency: USD, ref_sku: SM-L340NZKAXAA,
+     cookies: {eddzipcode: "10001"},
+     url: "https://www.samsung.com/us/watches/galaxy-watch9/buy/galaxy-watch9-40mm-graphite-bluetooth-sku-sm-l340nzkaxaa/"}
+sections:
+  - {id: device,          label_ko: 기기,            patterns: ["^device$", "^appareil$"]}
+  - {id: case_size,       label_ko: 케이스 크기,     patterns: ["^case size$", "taille de la valise", "taille du boîtier"]}
+  - {id: connectivity,    label_ko: 연결 방식,       patterns: ["^connectivit"]}
+  - {id: case_color,      label_ko: 케이스 색상,     patterns: ["^case colou?r$", "couleur du boîtier"]}
+  - {id: band_type,       label_ko: 밴드 종류,       patterns: ["^band type$", "^type de (bande|bracelet)"]}
+  - {id: band_color,      label_ko: 밴드 색상,       patterns: ["^band colou?r$", "^couleur de la (bande|bracelet)"]}
+  - {id: band_size,       label_ko: 밴드 크기,       patterns: ["^band size$", "^taille de la (bande|bracelet)"]}
+  - {id: extra_band,      label_ko: 추가 밴드,       patterns: ["additional (watch )?band", "bande supplémentaire", "30% off an additional"]}
+  - {id: trade_in,        label_ko: 트레이드인,      patterns: ["trade-?in", "échange"]}
+  - {id: care,            label_ko: Care+,           patterns: ["care\\+"]}
+  - {id: gifts,           label_ko: 사은품·할인,     patterns: ["gifts and savings", "cadeaux et économies", "other offers"]}
+  - {id: buy_direct,      label_ko: 직접 구매 혜택,  patterns: ["buy direct", "achetez directement", "acheter directement"]}
+  - {id: bundle,          label_ko: 번들 할인,       patterns: ["enhance your experience", "achat groupé"]}
+  - {id: purchase_option, label_ko: 결제 방식,       patterns: ["purchase option", "^one-time payment$"]}
+  - {id: card_offer,      label_ko: 카드 혜택,       patterns: ["galaxy card"]}
+  - {id: in_box,          label_ko: 구성품,          patterns: ["what.s in the box", "contenu de la boîte"]}
+  - {id: offer_banner,    label_ko: 오퍼 배너,       patterns: ["^offer banner"]}
+  - {id: price_bar,       label_ko: 상단 가격 바,    patterns: ["^price bar$"]}
+  - {id: summary,         label_ko: 주문 요약,       patterns: ["^summary$"]}
+key_specs:
+  - {id: display,         label_ko: 디스플레이 크기, patterns: ["size \\(main display\\)", "screen size", "taille.*écran", "^size$"]}
+  - {id: resolution,      label_ko: 해상도,          patterns: ["resolution \\(main display\\)", "^resolution", "^résolution"]}
+  - {id: battery,         label_ko: 배터리 용량,     patterns: ["battery capacity", "capacité de la batterie"]}
+  - {id: weight,          label_ko: 무게,            patterns: ["body weight", "^weight", "^poids"]}
+  - {id: dimensions,      label_ko: 치수,            patterns: ["body dimension", "^dimensions?", "^dimension"]}
+  - {id: durability,      label_ko: 내구성(방수),    patterns: ["durability", "water resistance", "résistance", "durabilité"]}
+  - {id: processor,       label_ko: 프로세서,        patterns: ["cpu speed", "processor", "processeur", "vitesse du processeur", "vitesse de l.unité centrale"]}

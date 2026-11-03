@@ -1,0 +1,49 @@
+{
+ "options": {},
+ "state": {
+  "selection": {
+   "storage": "256GB",
+   "color": "Green Shadow",
+   "carrier": "Unlocked"
+  },
+  "sku": "SM-F976UDGAXAA",
+  "prices": {
+   "base": "$1,899.99",
+   "monthly": "$79.17",
+   "was": "$2,099.99"
+  },
+  "available": null
+ },
+ "sections": null,
+ "spec_count": 69,
+ "spec_sample": [
+  [
+   "Processor",
+   "CPU Speed",
+   "4.74GHz, 3.6GHz"
+  ],
+  [
+   "Processor",
+   "CPU Type",
+   "Octa-Core"
+  ],
+  [
+   "Display",
+   "Size (Main_Display)",
+   "203.1mm (8.0\" full rectangle) / 202.4mm (8.0\" rounded corners)"
+  ],
+  [
+   "Display",
+   "Resolution (Main Display)",
+   "2504 x 2256 (QXGA+)"
+  ],
+  [
+   "Display",
+   "Technology (Main Display)",
+   "Dynamic AMOLED 2X"
+  ]
+ ],
+ "offers": [
+  "SM-F976UDGAXAA"
+ ]
+}

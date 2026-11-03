@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>국가별 화면 비교 목차</title>
+<style>
+:root { --bg: #f7f7f8; --surface: #fff; --text: #1b1c1f; --muted: #60636b; --line: #dcdee3; --accent: #2f5bd3;
+        --green: #217a46; --amber: #a35a00; --red: #d93036; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #131417; --surface: #1c1d21; --text: #e8e9ec; --muted: #a0a4ad; --line: #34363d; --accent: #8aa8ff;
+          --green: #5fd18b; --amber: #ffb547; --red: #ff6b6f; }
+}
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.muted { color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.card h2 { font-size: 16px; margin: 0 0 4px; }
+.card a { color: var(--accent); }
+.ok { color: var(--green); } .warn { color: var(--amber); } .err { color: var(--red); }
+</style>
+</head>
+<body>
+<main>
+  <h1>국가별 Samsung.com 화면 비교</h1>
+  <div class="muted">상품별 최신 실행 · 각 리포트는 차이점 카드, 가격·메뉴·주요 스펙 표, 전체 캡쳐 부록으로 구성됩니다.</div>
+  <div class="grid">
+  {% for it in items %}
+    <div class="card">
+      <h2>{% if it.has_report %}<a href="{{ it.report }}">{{ it.title }}</a>{% else %}{{ it.title }}{% endif %}</h2>
+      <div class="muted">{{ it.captured_at }} · 실행 {{ it.run }}</div>
+      <div>조합 {{ it.n }}개 · <span class="ok">ok {{ it.status["ok"] }}</span>{% if it.status["unavailable"] %} · <span class="warn">unavailable {{ it.status["unavailable"] }}</span>{% endif %}{% if it.status["mismatch"] %} · <span class="warn">mismatch {{ it.status["mismatch"] }}</span>{% endif %}{% if it.status["error"] %} · <span class="err">error {{ it.status["error"] }}</span>{% endif %}</div>
+      <div class="muted" style="font-size:12px">{{ it.contexts|join(" · ") }}</div>
+    </div>
+  {% endfor %}
+  </div>
+</main>
+</body>
+</html>

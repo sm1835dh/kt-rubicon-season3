@@ -1,0 +1,63 @@
+{
+ "options": {
+  "color": [
+   [
+    "acierinoxydable",
+    "Acier inoxydable",
+    "RF23DG9600SRAC",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Acier inoxydable"
+  },
+  "sku": "RF23DG9600SRAC",
+  "prices": {
+   "base": "3 299,98 $",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Choisissez votre Couleur",
+  "Choisissez votre Capacité",
+  "Dimensions",
+  "Samsung Care+",
+  "Vérification avant l'achat",
+  "Offers"
+ ],
+ "spec_count": 44,
+ "spec_sample": [
+  [
+   "Aperçu",
+   "Type de refroidissement",
+   "Triple Cooling"
+  ],
+  [
+   "Aperçu",
+   "Net Weight (kg)",
+   "137 kg"
+  ],
+  [
+   "Compartiment inférieur gauche",
+   "Tablettes",
+   "2 EA"
+  ],
+  [
+   "Compartiment inférieur gauche",
+   "Boîte",
+   "1 EA"
+  ],
+  [
+   "Compartiment inférieur gauche",
+   "Compartiments de porte",
+   "3 EA"
+  ]
+ ],
+ "offers": [
+  "RF23DG9600SRAC"
+ ]
+}

@@ -1,0 +1,69 @@
+{
+ "options": {
+  "color": [
+   [
+    "silver",
+    "Silver",
+    "RF65DG960ESREU",
+    true
+   ],
+   [
+    "black",
+    "Black",
+    "RF65DG960EB1EU",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "Silver"
+  },
+  "sku": "RF65DG960ESREU",
+  "prices": {
+   "base": "£3,399.00",
+   "monthly": null,
+   "was": null
+  },
+  "available": true
+ },
+ "sections": [
+  "Choose your Colour",
+  "Choose your Capacity",
+  "Dimensions",
+  "Want up to £100.00 off? Recycle your old appliance for an instant discount. Learn more",
+  "Pre-purchase check",
+  "Offers"
+ ],
+ "spec_count": 49,
+ "spec_sample": [
+  [
+   "Overview",
+   "Cooling Type",
+   "Triple Cooling"
+  ],
+  [
+   "Overview",
+   "Net Case Height with Hinge(mm)",
+   "1830 mm"
+  ],
+  [
+   "Overview",
+   "Net Depth with Door Handle(mm)",
+   "723 mm"
+  ],
+  [
+   "Overview",
+   "Net Weight(kg)",
+   "144 kg"
+  ],
+  [
+   "Overview",
+   "Net Width(mm)",
+   "912 mm"
+  ]
+ ],
+ "offers": [
+  "RF65DG960ESREU"
+ ]
+}

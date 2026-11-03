@@ -18,10 +18,20 @@ def _is_fr(locale: str) -> bool:
     return locale.lower().startswith("fr")
 
 
-def money_tokens(text: str, locale: str) -> list[str]:
+_BARE_MONTHLY = re.compile(r"(?<![\d$£€.,])(\d{1,3}(?:,\d{3})*\.\d{2})(?=\s*/\s*mo)")
+
+
+def money_tokens(text: str, locale: str, bare_monthly: bool = False) -> list[str]:
+    """Money amounts in order. bare_monthly also accepts "15.83/mo" without a currency sign (US headers)."""
     if not text:
         return []
-    return (_FR if _is_fr(locale) else _EN).findall(text)
+    rx = _FR if _is_fr(locale) else _EN
+    if not bare_monthly or _is_fr(locale):
+        return rx.findall(text)
+    sign = "£" if locale.lower().endswith("gb") else "$"
+    found = [(m.start(), m.group(0)) for m in rx.finditer(text)]
+    found += [(m.start(), sign + m.group(1)) for m in _BARE_MONTHLY.finditer(text)]
+    return [t for _, t in sorted(found)]
 
 
 def parse_money(token: str | None, locale: str, currency: str) -> Money | None:

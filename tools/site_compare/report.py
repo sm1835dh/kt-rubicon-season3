@@ -9,7 +9,8 @@ from pathlib import Path
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from .model import ComboResult, Product, RunData, Shot
+from .config import context_axes, map_section
+from .model import ComboResult, Product, RunData, Shot, TextBox
 
 TAGS = ("국가별 구성 차이", "사이트 데이터 오류", "소스 vs 화면 불일치", "CA-FR 번역")
 NOT_MENU = {"price_bar", "summary"}  # pseudo sections: captured, but not buy-flow steps
@@ -56,7 +57,12 @@ def _ws(s: str) -> str:
 
 def _find_shot(r: ComboResult, section: str) -> tuple[Shot | None, str | None]:
     if section == "full":
-        return None, r.full_shot
+        return None, (r.full_shots[0] if r.full_shots else None)
+    m = re.fullmatch(r"spec(?:-(\d+))?", section)
+    if m:
+        n = int(m.group(1) or 1)
+        shot = r.spec_shots[n - 1] if 0 < n <= len(r.spec_shots) else None
+        return shot, shot.path if shot else None
     m = re.fullmatch(r"extra-(\d+)", section)
     if m:
         n = int(m.group(1))
@@ -69,7 +75,7 @@ def _find_shot(r: ComboResult, section: str) -> tuple[Shot | None, str | None]:
 def _got_text(r: ComboResult) -> str:
     if not r.got:
         return "(상태 없음)"
-    parts = [r.got.storage, r.got.color, r.got.carrier, r.got.region, r.got.sku]
+    parts = list(r.got.selection.values()) + [r.got.region, r.got.sku]
     return " | ".join(p for p in parts if p)
 
 
@@ -78,7 +84,7 @@ def resolve_panel(panel: Panel, run: RunData, product: Product) -> dict:
     sec_labels = {s.id: s.label_ko for s in product.sections}
     out = {"img": None, "width": None, "height": None, "boxes": [], "warnings": [], "anchor": panel.combo,
            "label": panel.combo, "section": sec_labels.get(panel.section, panel.section), "url": None, "got": "",
-           "caption": panel.caption, "status": None, "wide": False, "combo_warnings": []}
+           "caption": panel.caption, "status": None, "wide": False, "combo_warnings": [], "crop": None, "view_w": None}
     r = next((x for x in run.results if x.combo_id == panel.combo), None)
     if r is None:
         out["warnings"].append(f"combo not found: {panel.combo}")
@@ -95,17 +101,59 @@ def resolve_panel(panel: Panel, run: RunData, product: Product) -> dict:
         if panel.highlight:
             out["warnings"].append("highlight not supported on full screenshot")
         return out
-    out.update(width=shot.width, height=shot.height, wide=shot.height > 0 and shot.width / shot.height > 5)
+    strip = shot.height > 0 and shot.width / shot.height > 5  # e.g. the sticky price bar: keep it whole
+    out.update(width=shot.width, height=shot.height, wide=strip)
+    found = []
     for h in panel.highlight:
         want = _ws(h)
         hits = [t for t in shot.texts if _ws(t.text) == want] or [t for t in shot.texts if want in _ws(t.text)]
         if not hits:
             out["warnings"].append(f"highlight not found: {h}")
             continue
-        t = min(hits, key=lambda t: t.w * t.h)
-        out["boxes"].append({"left": round(t.x / shot.width * 100, 3), "top": round(t.y / shot.height * 100, 3),
-                             "width": round(t.w / shot.width * 100, 3), "height": round(t.h / shot.height * 100, 3)})
+        found.append(_visible(min(hits, key=lambda t: t.w * t.h), shot.width, shot.height))
+    c = out["crop"] = None if strip else _crop_window(found, shot.width, shot.height)
+    x0, y0, cw, ch = (c["x0"], c["y0"], c["x1"] - c["x0"], c["y1"] - c["y0"]) if c else (0, 0, shot.width, shot.height)
+    out["wide"] = strip or cw > WIDE_PX  # a wide window squeezed into one grid column is unreadable
+    out["view_w"] = cw
+    for t in found:
+        out["boxes"].append({"left": round((t.x - x0) / cw * 100, 3), "top": round((t.y - y0) / ch * 100, 3),
+                             "width": round(t.w / cw * 100, 3), "height": round(t.h / ch * 100, 3)})
     return out
+
+
+CROP_PAD, CROP_MIN_W, CROP_MIN_H = 160, 560, 280
+HL_MIN = 28
+
+
+def _visible(t: TextBox, width: int, height: int) -> TextBox:
+    """Grow a tiny text box (e.g. an icon's alt text) so its highlight can be seen, centred on the original."""
+    if t.w >= 6 and t.h >= 6:
+        return t
+    w, h = max(t.w, HL_MIN), max(t.h, HL_MIN)
+    x = min(max(0, t.x - (w - t.w) / 2), max(0, width - w))
+    y = min(max(0, t.y - (h - t.h) / 2), max(0, height - h))
+    return TextBox(t.text, x, y, w, h)
+WIDE_PX = 720
+
+
+def _crop_window(boxes: list, width: int, height: int) -> dict | None:
+    """A window around the highlighted texts, so a tall or full-width shot stays readable in a card column."""
+    if not boxes or not width or not height:
+        return None
+
+    def span(lo, hi, size, minimum):
+        lo, hi = max(0, lo - CROP_PAD), min(size, hi + CROP_PAD)
+        if hi - lo < minimum:  # widen around the centre, kept inside the image
+            mid = (lo + hi) / 2
+            lo, hi = max(0, min(mid - minimum / 2, size - minimum)), min(size, max(mid + minimum / 2, minimum))
+        return round(lo), round(hi)
+
+    x0, x1 = span(min(b.x for b in boxes), max(b.x + b.w for b in boxes), width, CROP_MIN_W)
+    y0, y1 = span(min(b.y for b in boxes), max(b.y + b.h for b in boxes), height, CROP_MIN_H)
+    if (x1 - x0) * (y1 - y0) >= 0.6 * width * height:
+        return None  # the shot is already about the size of the window
+    return {"x0": x0, "y0": y0, "x1": x1, "y1": y1, "tx": round(x0 / width * 100, 3), "ty": round(y0 / height * 100, 3),
+            "scale": round(width / (x1 - x0) * 100, 3)}
 
 
 def _columns(run: RunData, product: Product) -> list[dict]:
@@ -126,18 +174,93 @@ def _main(run: RunData, ctx_id: str, storage: str, carrier: str | None) -> Combo
     return None
 
 
-def _price_cell(r: ComboResult | None) -> dict:
+def _row_id(r: ComboResult) -> str:
+    return r.combo_id.split("__", 1)[1] if "__" in r.combo_id else r.combo_id
+
+
+def _lead_number(label: str) -> float | None:
+    m = re.match(r"\s*(\d+(?:\.\d+)?)", label)
+    return float(m.group(1)) if m else None
+
+
+def _ref_result(run: RunData, product: Product, col: dict) -> ComboResult | None:
+    if product.mode == "click":
+        return _main(run, col["ctx"].id, product.storages[0], col["carrier"])
+    mine = [r for r in run.results if r.context_id == col["ctx"].id and r.kind == "main"]
+    return next((r for r in mine if r.is_ref), mine[0] if mine else None)
+
+
+def _price_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
+    if product.mode == "click":
+        return [{"label": s, "cells": [_price_cell(_main(run, c["ctx"].id, s, c["carrier"]), c) for c in cols]}
+                for s in product.storages]
+    # a context without option axes (e.g. a spec-only one) sits in the row of the other contexts' reference combo
+    ref_row = next((_row_id(r) for r in run.results if r.is_ref and _row_id(r) != "ref"), "ref")
+    rows_by_combo: dict[str, str] = {}
+    sku_row: dict[tuple[str, str], str] = {}
+    for ctx in run.contexts:  # a verified SKU seen in an earlier context keeps its row (CA-FR "Acier" = CA-EN "Silver")
+        for r in run.results:
+            if r.context_id != ctx.id or r.kind != "main":
+                continue
+            row = ref_row if _row_id(r) == "ref" else _row_id(r)
+            sku = (r.got.sku or "").upper() if r.got and r.status == "ok" else ""
+            # same country only (same currency): CA "Gray" and US "Dark Steel" share a SKU but are named differently
+            key = (ctx.currency, sku)
+            rows_by_combo[r.combo_id] = sku_row.setdefault(key, row) if sku else row
+    row_of = lambda r: rows_by_combo[r.combo_id]
+    ids: list[str] = []
+    labels: dict[str, str] = {}
+    for ctx in run.contexts:  # union of combo keys in context order; "55" and '55"' share a row (same value)
+        for r in run.results:
+            if r.context_id == ctx.id and r.kind == "main" and row_of(r) not in labels:
+                ids.append(row_of(r))
+            if r.context_id == ctx.id and r.kind == "main" and _row_id(r) != "ref":
+                labels.setdefault(row_of(r), r.key or row_of(r))
+            elif r.context_id == ctx.id and r.kind == "main":
+                labels.setdefault(row_of(r), "기준 구성")
+    if ids and all(_lead_number(labels[i]) is not None for i in ids):
+        ids.sort(key=lambda i: _lead_number(labels[i]))  # stable: 40mm·BT before 40mm·LTE
+    rows = []
+    for i in ids:
+        cells = []
+        for c in cols:
+            r = next((r for r in run.results if r.context_id == c["ctx"].id and r.kind == "main" and row_of(r) == i),
+                     None)
+            cells.append(_price_cell(r, c) if r else
+                         {"id": None, "cls": "cell missing" + (" spec-only" if c["ctx"].spec_only else ""),
+                          "text": "—", "was": None, "title": "이 컨텍스트에는 없는 조합", "status": None, "warn": 0})
+        rows.append({"label": labels[i], "cells": cells})
+    return rows
+
+
+def _key_spec_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
+    refs = [_ref_result(run, product, c) for c in cols]
+    rows = []
+    for rule in product.key_specs:
+        cells = []
+        for r in refs:  # patterns are in priority order: "noise level" before the generic "noise"
+            hit = next((sp for p in rule.patterns for sp in (r.specs if r else []) if re.search(p, sp.label, re.I)),
+                       None)
+            cells.append({"value": hit.value, "label": hit.label} if hit else None)
+        rows.append({"label": rule.label_ko, "cells": cells})
+    return rows
+
+
+def _price_cell(r: ComboResult | None, col: dict | None = None) -> dict:
     if r is None:
         return {"id": None, "cls": "cell missing", "text": "미수집", "was": None, "title": "", "status": None, "warn": 0}
     p = r.got.prices if r.got else None
     cls = "cell" + (" diff" if r.price_match is False else "") + ("" if r.status == "ok" else f" st-{r.status}")
+    if col and col["ctx"].spec_only:
+        cls += " spec-only"
     tip = []
     if p:
         tip += [f"headline: {p.headline}", f"monthly: {p.monthly}", f"was: {p.was}"]
     if r.jsonld:
         tip.append(f"JSON-LD: {r.jsonld.price} {r.jsonld.currency}" + (f" (정가 {r.jsonld.strike})" if r.jsonld.strike else ""))
     if r.status == "unavailable":  # the page stayed on another variant; its price is not this combo's price
-        return {"id": r.combo_id, "cls": cls, "text": "선택 불가", "was": None,
+        sold_out = bool(r.got and r.got.available is False)
+        return {"id": r.combo_id, "cls": cls, "text": "판매 종료" if sold_out else "선택 불가", "was": None,
                 "title": "\n".join(r.warnings), "status": None, "warn": 0}
     if r.warnings:
         cls += " warned"
@@ -147,10 +270,9 @@ def _price_cell(r: ComboResult | None) -> dict:
 
 
 def _menu_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
-    first = product.storages[0]
     per_col = []
     for c in cols:
-        r = _main(run, c["ctx"].id, first, c["carrier"])
+        r = _ref_result(run, product, c)
         per_col.append([s for s in (r.sections if r else []) if s.section_id not in NOT_MENU])
     rows = []
     for rule in product.sections:
@@ -171,9 +293,20 @@ def _menu_rows(run: RunData, product: Product, cols: list[dict]) -> list[dict]:
     return rows
 
 
+def _axes_text(product: Product, ctx) -> str:
+    if ctx.spec_only:
+        return "스펙만 (판매 종료)"
+    parts = [f"{a.name} 전체" if a.iterate else f"{a.name} {a.fixed} 고정"
+             for a in context_axes(product, ctx) if a.iterate or a.fixed]
+    return " · ".join(parts) or "기준 구성 1개"
+
+
 def build_report(run_dir: Path, product: Product, cards_path: Path) -> Path:
     run_dir = Path(run_dir)
     run = RunData.from_json(run_dir / "data.json")
+    for r in run.results:  # section patterns added to the yaml after capture apply on rebuild
+        for s in r.sections:
+            s.section_id = map_section(s.title, product.sections)
     cols = _columns(run, product)
     cards = []
     for card in load_cards(cards_path):
@@ -188,11 +321,32 @@ def build_report(run_dir: Path, product: Product, cards_path: Path) -> Path:
         run=run, product=product, cols=cols, labels=labels, by_ctx=by_ctx, checks=checks, cards=cards,
         status=Counter(r.status for r in run.results), n_warn=sum(len(r.warnings) for r in run.results),
         n_warned=sum(1 for r in run.results if r.warnings),
-        price_rows=[{"storage": s, "cells": [_price_cell(_main(run, c["ctx"].id, s, c["carrier"])) for c in cols]}
-                    for s in product.storages],
+        price_rows=_price_rows(run, product, cols), key_spec_rows=_key_spec_rows(run, product, cols),
         menu_rows=_menu_rows(run, product, cols), colors=list(product.colors),
         sec_labels={s.id: s.label_ko for s in product.sections},
+        ctx_axes={c.id: _axes_text(product, c) for c in run.contexts},
     )
     out = run_dir / "report.html"
     out.write_text(html, encoding="utf-8")
+    return out
+
+
+def build_index(out_root: Path) -> Path:
+    """out_root/index.html: the latest run of every product with its status counts and report link."""
+    out_root = Path(out_root)
+    items = []
+    for product_dir in sorted(p for p in out_root.iterdir() if p.is_dir()):
+        runs = sorted(d for d in product_dir.iterdir() if (d / "data.json").exists())
+        if not runs:
+            continue
+        run = RunData.from_json(runs[-1] / "data.json")
+        items.append({"title": run.title, "product": product_dir.name, "run": runs[-1].name,
+                      "captured_at": run.captured_at, "status": Counter(r.status for r in run.results),
+                      "n": len(run.results), "contexts": [c.label for c in run.contexts],
+                      "report": f"{product_dir.name}/{runs[-1].name}/report.html",
+                      "has_report": (runs[-1] / "report.html").exists()})
+    env = Environment(loader=FileSystemLoader(Path(__file__).parent / "templates"),
+                      autoescape=select_autoescape(["html", "j2"]), trim_blocks=True, lstrip_blocks=True)
+    out = out_root / "index.html"
+    out.write_text(env.get_template("index.html.j2").render(items=items), encoding="utf-8")
     return out

@@ -1,0 +1,47 @@
+{
+ "options": {},
+ "state": {
+  "selection": {
+   "color": "Gray"
+  },
+  "sku": "NP960XJG-KG1US",
+  "prices": {
+   "base": "$2,149.99",
+   "monthly": "$89.59",
+   "was": "$2,649.99"
+  },
+  "available": null
+ },
+ "sections": null,
+ "spec_count": 42,
+ "spec_sample": [
+  [
+   "Operating System",
+   "Operating System",
+   "Windows 11 HomeSamsung recommends Windows 11 Pro for Business"
+  ],
+  [
+   "Processor",
+   "CPU",
+   "Intel® Core™ Ultra X7 processor 358H"
+  ],
+  [
+   "Processor",
+   "GPU",
+   "Intel® Arc™ B390"
+  ],
+  [
+   "Processor",
+   "GPU Type",
+   "Shared"
+  ],
+  [
+   "Processor",
+   "NPU",
+   "Intel® NPU"
+  ]
+ ],
+ "offers": [
+  "NP960XJG-KG1US"
+ ]
+}

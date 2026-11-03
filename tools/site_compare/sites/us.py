@@ -4,9 +4,10 @@ from __future__ import annotations
 import re
 from typing import Iterator
 
-from ..model import Context, PriceTexts, Product, State
+from ..model import Context, Option, PriceTexts, Product, State
 from ..prices import money_tokens
-from .base import Box, OptionNotFound, OptionUnavailable
+from .base import BaseDriver, Box, OptionNotFound, OptionUnavailable
+from .common import click_tile, norm_label, us_specs
 
 CARRIER_SUFFIX = {"unlocked": "XAA", "verizon": "VZW", "at&t": "ATT"}
 STORAGE_CODE = {"256gb": "A", "512gb": "E", "1tb": "F"}
@@ -18,7 +19,7 @@ _SECTIONS_JS = r"""
   // Reviews start the non-buy part of the page; the header rating widget near the top is not it.
   const stopAt = (() => { const r = [...document.querySelectorAll('[class*=ReviewSummary_], [class*=AISummaryBlock], #reviews, footer')]
     .filter(vis).map(e => e.getBoundingClientRect().top + scrollY).filter(y => y > 1000);
-    const sum = [...document.querySelectorAll('div')].filter(e => /SM-[A-Z0-9]+ \/ SM-/.test(e.innerText)
+    const sum = [...document.querySelectorAll('div')].filter(e => /[A-Z0-9][A-Z0-9-]{3,} \/ [A-Z0-9]+-[A-Z0-9]+/.test(e.innerText)
       && /Total/.test(e.innerText) && e.getBoundingClientRect().width > 500)
       .sort((a, b) => a.innerText.length - b.innerText.length)[0];
     if (sum) r.push(sum.getBoundingClientRect().top + scrollY);  // buy flow ends at the order summary
@@ -52,20 +53,26 @@ _SECTIONS_JS = r"""
 _STATE_JS = r"""
 () => {
   const lines = document.body.innerText.split('\n').map(s => s.trim()).filter(Boolean);
-  const skuLine = lines.find(l => /^SM-[A-Z0-9]+\s*\/\s*SM-[A-Z0-9]+$/.test(l)) || '';
+  const skuLine = lines.find(l => /^[A-Z0-9][A-Z0-9-]{3,}\s*\/\s*[A-Z0-9]+-[A-Z0-9]+$/.test(l)) || '';
   const sel = lines[lines.indexOf(skuLine) - 1] || '';
   const ti = lines.findIndex(l => l === 'Total');
   const bar = document.querySelector('h1') && document.querySelector('h1').closest('div[class]');
   let top = document.querySelector('h1');
   while (top && top.getBoundingClientRect().width < 1300) top = top.parentElement;
-  return {skuLine, sel, total: ti >= 0 ? lines.slice(ti + 1, ti + 3).join(' ') : '',
+  const isOn = e => e.getAttribute('aria-checked') === 'true' || e.getAttribute('aria-pressed') === 'true'
+                    || /selected/i.test(String(e.className));
+  const tiles = [...document.querySelectorAll('[an-la]')].filter(isOn).map(e => e.getAttribute('an-la'));
+  const color = [...document.querySelectorAll("[aria-label^='Color Variant:']")].filter(isOn)
+                  .map(e => e.getAttribute('aria-label').replace(/^Color Variant:\s*/, ''))[0] || null;
+  const mo = lines.find(l => /\d\.\d{2}\s*\/\s*mo/.test(l)) || '';  // first monthly line (header), layout-free
+  return {skuLine, sel, total: ti >= 0 ? lines.slice(ti + 1, ti + 3).join(' ') : '', tiles, color, mo,
           headline: top ? top.innerText.replace(/\s+/g, ' ').trim() : ''};
 }
 """
 
 
 def _sku_from_url(url: str) -> str | None:
-    m = re.search(r"-sku-(sm-[a-z0-9]+)/?$", url.lower())
+    m = re.search(r"-sku-([a-z0-9-]+)/?(?:\?.*)?$", (url or "").lower())
     return m.group(1).upper() if m else None
 
 
@@ -75,7 +82,14 @@ def _rect(page, js_expr: str) -> Box | None:
     return tuple(b) if b else None
 
 
-class UsDriver:
+AN_LA_AXES = {"case size": "size", "card": "connectivity", "case color": "color", "band type": "band_type",
+              "band color": "band_color", "band size": "band_size"}
+AXIS_AN_LA = {v: k for k, v in AN_LA_AXES.items()}
+SNAPSHOT_KEEP = ["#__next"]  # Next.js root: buy flow, summary and specs live under it
+
+
+class UsDriver(BaseDriver):
+    OFFLINE_SECTIONS = False  # titles are found by computed font size and position; live tests cover them
     # Carrier tiles change after re-clicks and overlays, so every combo starts from a fresh load.
     fresh_page_per_combo = True
 
@@ -120,6 +134,46 @@ class UsDriver:
         if msg.count() and msg.first.is_visible():
             raise OptionUnavailable(msg.first.inner_text().strip())
 
+    def options(self, page, ctx: Context, axis: str) -> list[Option]:
+        prefix = AXIS_AN_LA.get(axis)
+        if not prefix:
+            return []
+        try:
+            page.wait_for_selector(f"[an-la^='{prefix}:']", state="attached", timeout=15000)
+        except Exception:
+            return []
+        # only option tiles carry model data; links like "case size:case sizing guide" share the an-la prefix
+        rows = page.eval_on_selector_all(f"[an-la^='{prefix}:']", """els => els
+            .filter(e => e.dataset.modeldisplay || e.dataset.modelcode)
+            .map(e => ({anla: e.getAttribute('an-la'), sku: e.dataset.modelcode || null,
+                        disabled: e.getAttribute('aria-disabled') === 'true' || /disabled/i.test(e.className)}))""")
+        out, seen = [], set()
+        for r in rows:
+            val = r["anla"].split(":", 1)[1].strip()
+            key = norm_label(val)
+            if not key or key in seen or "learnmore" in key:
+                continue
+            seen.add(key)
+            out.append(Option(axis, key, val, (r["sku"] or "").upper() or None, available=not r["disabled"],
+                              handle=r["anla"]))
+        return out
+
+    def choose(self, page, ctx: Context, option: Option) -> None:
+        loc = page.locator(f"[an-la='{option.handle}']")
+        target = next((loc.nth(i) for i in range(loc.count()) if loc.nth(i).is_visible()), None)
+        if target is None:
+            raise OptionNotFound(f"{option.axis} {option.label}: no tile [an-la='{option.handle}']")
+        before = page.url
+        click_tile(target)
+        for _ in range(30):
+            page.wait_for_timeout(500)
+            if page.url != before:
+                break
+        page.wait_for_timeout(2000)
+
+    def specs(self, page):
+        return us_specs(page)
+
     def read_state(self, page, ctx: Context, product: Product) -> State:
         # The order summary only renders once scrolled into view.
         for y in range(0, 6000, 1000):
@@ -127,18 +181,30 @@ class UsDriver:
             page.wait_for_timeout(200)
         page.evaluate("window.scrollTo(0, 0)")
         d = page.evaluate(_STATE_JS)
-        parts = [p.strip() for p in d["sel"].split("|")]
-        storage, color, carrier = (parts + [None, None, None])[:3] if len(parts) >= 3 else (None, None, None)
+        if product.mode == "click":  # Fold8: summary line "256GB | Graphite | Verizon"
+            parts = [p.strip() for p in d["sel"].split("|")]
+            storage, color, carrier = (parts + [None, None, None])[:3] if len(parts) >= 3 else (None, None, None)
+            selection = {k: v for k, v in (("storage", storage), ("color", color), ("carrier", carrier)) if v}
+        else:  # other buy pages: read the selected tiles, never summary positions (watch summary has hidden fields)
+            selection = {}
+            for anla in d["tiles"]:
+                prefix, _, val = anla.partition(":")
+                axis = AN_LA_AXES.get(prefix.strip().lower())
+                if axis and val and axis not in selection:
+                    selection[axis] = val.strip()
+            if d["color"]:
+                selection["color"] = d["color"]
         sku = None
-        m = re.search(r"/\s*(SM-[A-Z0-9]+)$", d["skuLine"])
+        m = re.search(r"/\s*([A-Z0-9]+-[A-Z0-9]+)$", d["skuLine"])
         if m:
             sku = m.group(1)
         sku = sku or _sku_from_url(page.url)
         total = money_tokens(d["total"], ctx.locale)
         was = re.search(r"was\s*(\$[\d,.]+)", d["total"])
-        head = money_tokens(d["headline"], ctx.locale)
-        monthly = next((t for t in head if f"{t}/mo" in d["headline"].replace(" ", "")), None)
-        return State(storage, color, carrier, None, sku,
+        mo = re.search(r"(\$?\d[\d,]*\.\d{2})\s*/\s*mo", d["headline"]) or \
+            re.search(r"(\$?\d[\d,]*\.\d{2})\s*/\s*mo", d["mo"])  # "$79.17/mo" or bare "15.83/mo"
+        monthly = ("$" + mo.group(1).lstrip("$")) if mo else None
+        return State(selection, None, sku,
                      PriceTexts(base=total[0] if total else None, monthly=monthly,
                                 headline=d["headline"] or None, was=was.group(1) if was else None))
 
@@ -152,7 +218,7 @@ class UsDriver:
             out.append(("Price bar", bar))
         out += [(t, tuple(b)) for t, b in page.evaluate(_SECTIONS_JS)]
         summary = _rect(page, "(() => { const c = [...document.querySelectorAll('div')].filter(e => "
-                              "/You Saved Today|Total/.test(e.innerText) && /SM-[A-Z0-9]+ \\/ SM-/.test(e.innerText) "
+                              "/You Saved Today|Total/.test(e.innerText) && /[A-Z0-9][A-Z0-9-]{3,} \\/ [A-Z0-9]+-[A-Z0-9]+/.test(e.innerText) "
                               "&& e.getBoundingClientRect().width > 500); "
                               "return c.sort((a, b) => a.innerText.length - b.innerText.length)[0]; })()")
         if summary:

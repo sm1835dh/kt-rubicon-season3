@@ -1,0 +1,41 @@
+id: fridge_t_style
+title: T-Style 프렌치도어 + 비버리지 센터 냉장고
+axes: [{name: color, iterate: true}]
+contexts:
+  - {id: uk,       label: "UK",              driver: pd, locale: en-GB, currency: GBP, ref_sku: RF65DG960ESREU,
+     url: "https://www.samsung.com/uk/refrigerators/multi-door/rf9000d-rf9000dc-t-style-french-door-beverage-center-645l-silver-rf65dg960esreu/"}
+  - {id: ca-en-on, label: "CA-EN · Ontario", driver: pd, locale: en-CA, currency: CAD, region: CA-ON, ref_sku: RF23DG9600SRAC,
+     url: "https://www.samsung.com/ca/refrigerators/french-door/counter-depth-4-door-flex-refrigerator-with-beverage-center-23-cu-ft-stainless-steel-rf23dg9600srac/"}
+  - {id: ca-en-qc, label: "CA-EN · Quebec",  driver: pd, locale: en-CA, currency: CAD, region: CA-QC, ref_sku: RF23DG9600SRAC,
+     url: "https://www.samsung.com/ca/refrigerators/french-door/counter-depth-4-door-flex-refrigerator-with-beverage-center-23-cu-ft-stainless-steel-rf23dg9600srac/"}
+  - {id: ca-fr-on, label: "CA-FR · Ontario", driver: pd, locale: fr-CA, currency: CAD, region: CA-ON, ref_sku: RF23DG9600SRAC,
+     url: "https://www.samsung.com/ca_fr/refrigerators/french-door/counter-depth-4-door-flex-refrigerator-with-beverage-center-23-cu-ft-stainless-steel-rf23dg9600srac/"}
+  - {id: ca-fr-qc, label: "CA-FR · Québec",  driver: pd, locale: fr-CA, currency: CAD, region: CA-QC, ref_sku: RF23DG9600SRAC,
+     url: "https://www.samsung.com/ca_fr/refrigerators/french-door/counter-depth-4-door-flex-refrigerator-with-beverage-center-23-cu-ft-stainless-steel-rf23dg9600srac/"}
+  - {id: us,       label: "US",              driver: us_pdp, locale: en-US, currency: USD, ref_sku: RF23DB9600QLAA,
+     cookies: {eddzipcode: "10001"}, axes: [{name: depth, iterate: true}],
+     url: "https://www.samsung.com/us/refrigerators/french-door/bespoke-counter-depth-4-door-flex-refrigerator-23-cu-ft-with-beverage-center-in-stainless-steel-sku-rf23db9600qlaa/"}
+sections:
+  - {id: color,        label_ko: 색상,             patterns: ["colou?r", "couleur"]}
+  - {id: depth,        label_ko: 깊이,             patterns: ["^depth$"]}
+  - {id: capacity,     label_ko: 용량,             patterns: ["capacity", "capacité"]}
+  - {id: dimensions,   label_ko: 치수 확인,        patterns: ["^dimensions$", "make sure", "assurez-vous"]}
+  - {id: open_box,     label_ko: 오픈박스,         patterns: ["open box"]}
+  - {id: trade_in,     label_ko: 트레이드업·재활용, patterns: ["recycle your old", "trade-?(in|up)"]}
+  - {id: care,         label_ko: Care+,            patterns: ["care\\+"]}
+  - {id: water_filter, label_ko: 정수 필터,        patterns: ["water filter"]}
+  - {id: pre_purchase, label_ko: 구매 전 확인,     patterns: ["pre-purchase", "vérification avant"]}
+  - {id: delivery,     label_ko: 배송·설치,        patterns: ["delivery options", "estimate delivery", "frais de livraison"]}
+  - {id: offers,       label_ko: 오퍼,             patterns: ["^offers?$", "offer programs", "programmes d.offres"]}
+  - {id: payment,      label_ko: 결제 방식,        patterns: ["payment options"]}
+  - {id: card_offer,   label_ko: 카드 혜택,        patterns: ["galaxy card"]}
+  - {id: price_bar,    label_ko: 상단 가격 바,     patterns: ["^price bar$"]}
+  - {id: summary,      label_ko: 주문 요약,        patterns: ["^summary$"]}
+key_specs:
+  - {id: capacity,     label_ko: 총용량,           patterns: ["gross total", "net total", "total capacity", "total net", "capacité totale", "capacité brute"]}
+  - {id: energy_class, label_ko: 에너지 등급·인증,  patterns: ["energy efficiency class", "energy star"]}
+  - {id: energy_use,   label_ko: 에너지 소비량,    patterns: ["energy consumption", "consommation d.énergie", "consommation énergétique"]}
+  - {id: dimensions,   label_ko: 치수,             patterns: ["net dimension", "^dimensions", "product dimensions"]}
+  - {id: width,        label_ko: 폭,               patterns: ["net width", "^width", "^largeur"]}
+  - {id: weight,       label_ko: 무게,             patterns: ["net weight", "poids net", "product weight"]}
+  - {id: noise,        label_ko: 소음,             patterns: ["noise", "bruit"]}

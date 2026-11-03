@@ -1,0 +1,71 @@
+{
+ "options": {
+  "depth": [
+   [
+    "counterdepth",
+    "counter depth",
+    "RF23DB9600QLAA",
+    true
+   ],
+   [
+    "fulldepth",
+    "full depth",
+    "RF29DB9600QLAA",
+    true
+   ]
+  ]
+ },
+ "state": {
+  "selection": {
+   "color": "stainless steel",
+   "depth": "counter depth"
+  },
+  "sku": "RF23DB9600QLAA",
+  "prices": {
+   "base": "$2,799.00",
+   "monthly": "$116.63",
+   "was": "$3,728.99"
+  },
+  "available": true
+ },
+ "sections": [
+  "Color",
+  "Depth",
+  "Offers",
+  "Open Box Pricing",
+  "Samsung care+",
+  "Delivery options for:",
+  "Payment options"
+ ],
+ "spec_count": 108,
+ "spec_sample": [
+  [
+   "Bottom Right",
+   "Shelf",
+   "2 EA"
+  ],
+  [
+   "Capacity",
+   "Total Capacity (cu. ft.)",
+   "22.8"
+  ],
+  [
+   "Capacity",
+   "Refrigerator Capacity (cu. ft.)",
+   "14"
+  ],
+  [
+   "Capacity",
+   "Freezer Capacity (cu. ft.)",
+   "8.8"
+  ],
+  [
+   "Capacity",
+   "Ice making capacity",
+   "5.1 lbs / day"
+  ]
+ ],
+ "offers": [
+  "RF23DB9600QLAA"
+ ]
+}
